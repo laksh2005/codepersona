@@ -77,7 +77,7 @@ const LoadingState = ({ username }: LoadingStateProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <p className="text-lg text-muted-foreground mb-2">Generating journey for</p>
+          <p className="text-lg text-muted-foreground mb-2">Creating the code persona for</p>
           <h1 className="font-display text-3xl font-bold text-gradient mb-8">
             @{username}
           </h1>
