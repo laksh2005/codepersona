@@ -57,7 +57,7 @@ const Index = () => {
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center overflow-hidden">
-               <img src="/favicon.ico" alt="Logo" className="w-8 h-8 object-contain" />
+               <img src="/blackbg.png" alt="Logo" className="w-12 h-12 object-contain" />
             </div>
             <span className="font-display text-2xl font-semibold text-foreground">Code Persona</span>
           </div>
@@ -84,7 +84,7 @@ const Index = () => {
               Your code tells a story
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Your commits, choices, and projects already say a lot. <br /> Code Persona brings that story into focus.
+              Your commits, choices, and projects already say <span className="text-primary">a lot</span>. <br /> <span className="text-primary">Code Persona</span> brings that story into focus.
             </p>
           </motion.div>
 
@@ -139,7 +139,7 @@ const Index = () => {
             transition={{ delay: 0.6 }}
             className="text-muted-foreground text-sm"
           >
-            Explore your journey at /your-github-username
+            get yours at <span className="font-bold text-primary">codepersona.app/your-github-username</span>
           </motion.p>
 
         </main>

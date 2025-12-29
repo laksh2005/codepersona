@@ -19,7 +19,3 @@ It analyzes real repositories to surface:
 - No vanity metrics
 - Insight-first, identity-driven
 - Built for resumes, interviews, and reflection
-
----
-
-Built by **Laksh Nijhawan**.
