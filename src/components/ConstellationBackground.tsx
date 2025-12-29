@@ -39,7 +39,7 @@ const TetrisBackground = ({ keystrokeCount }: TetrisBackgroundProps) => {
     y: Math.random() * 95,
     type: Math.floor(Math.random() * TETRIS_SHAPES.length),
     rotation: Math.floor(Math.random() * 4) * 90,
-    opacity: 0.08 + Math.random() * 0.12,
+    opacity: 0.10 + Math.random() * 0.16,
     scale: 0.6 + Math.random() * 0.6,
   });
 
@@ -57,7 +57,7 @@ const TetrisBackground = ({ keystrokeCount }: TetrisBackgroundProps) => {
         x: Math.max(2, Math.min(93, block.x + (Math.random() - 0.5) * 8)),
         y: Math.max(2, Math.min(93, block.y + (Math.random() - 0.5) * 8)),
         rotation: block.rotation + (Math.random() > 0.5 ? 90 : -90),
-        opacity: 0.08 + Math.random() * 0.12,
+        opacity: 0.18 + Math.random() * 0.22,
       }))
     );
   }, []);
