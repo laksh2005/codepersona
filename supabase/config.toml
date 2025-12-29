@@ -1,0 +1,7 @@
+project_id = "gzilrlsuzjatiejnpftf"
+
+[functions.github-journey]
+verify_jwt = false
+
+[functions.analyze-repo]
+verify_jwt = false
