@@ -34,21 +34,21 @@ const iconMap: Record<string, typeof Trophy> = {
 const rarityStyles = {
   common: {
     bg: "bg-card",
-    border: "border-green-500/30",
-    icon: "bg-green-500/20 text-green-400",
-    glow: "shadow-green-500/10",
+    border: "border-green-500/30 dark:border-green-500/30",
+    icon: "bg-green-500/20 dark:bg-green-500/20 text-green-600 dark:text-green-400",
+    glow: "shadow-green-500/10 dark:shadow-green-500/10",
   },
   rare: {
     bg: "bg-card",
-    border: "border-yellow-500/30",
-    icon: "bg-yellow-500/20 text-yellow-400",
-    glow: "shadow-yellow-500/10",
+    border: "border-yellow-500/30 dark:border-yellow-500/30",
+    icon: "bg-yellow-500/20 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400",
+    glow: "shadow-yellow-500/10 dark:shadow-yellow-500/10",
   },
   legendary: {
     bg: "bg-card",
-    border: "border-red-500/30",
-    icon: "bg-red-500/20 text-red-400",
-    glow: "shadow-red-500/10",
+    border: "border-red-500/30 dark:border-red-500/30",
+    icon: "bg-red-500/20 dark:bg-red-500/20 text-red-600 dark:text-red-400",
+    glow: "shadow-red-500/10 dark:shadow-red-500/10",
   },
 };
 
@@ -75,7 +75,9 @@ const Achievements = ({ achievements, className, compact = false }: Achievements
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className={`aspect-square rounded-xl flex items-center justify-center border cursor-help ${styles.bg} ${styles.border} ${styles.glow}`}>
-                         <IconComponent className={`w-5 h-5 ${styles.icon.split(" ")[1]}`} />
+                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${styles.icon.split(" ").filter(c => c.startsWith("bg")).join(" ")}`}>
+                           <IconComponent className={`w-5 h-5 ${styles.icon.split(" ").filter(c => c.startsWith("text")).join(" ")}`} />
+                         </div>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
@@ -133,11 +135,11 @@ const Achievements = ({ achievements, className, compact = false }: Achievements
                     </div>
 
                     <div className="flex-1">
-                      <h3 className="font-display text-lg font-semibold text-white mb-2">{badge.name}</h3>
-                      <p className="text-sm text-gray-300 mb-3">{badge.description}</p>
-                      <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                        <p className="text-xs text-gray-400">
-                          <span className="font-medium text-white">Evidence: </span>
+                      <h3 className="font-display text-lg font-semibold text-foreground mb-2">{badge.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">{badge.description}</p>
+                      <div className="p-3 rounded-lg bg-muted/30 dark:bg-muted/20 border border-border">
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">Evidence: </span>
                           {badge.reasoning}
                         </p>
                       </div>

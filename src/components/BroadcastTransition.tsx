@@ -1,12 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Github } from "lucide-react";
+import { useTransition } from "@/contexts/TransitionContext";
 
 interface BroadcastTransitionProps {
   isActive: boolean;
-  direction?: "in" | "out";
 }
 
-const BroadcastTransition = ({ isActive, direction = "in" }: BroadcastTransitionProps) => {
+const BroadcastTransition = ({ isActive }: BroadcastTransitionProps) => {
+  const { transitionDirection } = useTransition();
+  const direction = transitionDirection;
   return (
     <AnimatePresence>
       {isActive && (
@@ -20,13 +22,13 @@ const BroadcastTransition = ({ isActive, direction = "in" }: BroadcastTransition
           {/* Left panel - slides from left */}
           <motion.div
             className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-background via-background to-primary/20"
-            initial={{ x: "-100%" }}
+            initial={{ x: direction === "out" ? "0%" : "-100%" }}
             animate={{ x: direction === "in" ? "0%" : "-100%" }}
             exit={{ x: "-100%" }}
             transition={{
-              duration: 0.5,
+              duration: 0.6,
               ease: [0.76, 0, 0.24, 1],
-              delay: direction === "out" ? 0.1 : 0,
+              delay: direction === "out" ? 0 : 0.1,
             }}
           >
             {/* Diagonal stripe accent */}
@@ -49,13 +51,13 @@ const BroadcastTransition = ({ isActive, direction = "in" }: BroadcastTransition
           {/* Right panel - slides from right */}
           <motion.div
             className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-background via-background to-primary/20"
-            initial={{ x: "100%" }}
+            initial={{ x: direction === "out" ? "0%" : "100%" }}
             animate={{ x: direction === "in" ? "0%" : "100%" }}
             exit={{ x: "100%" }}
             transition={{
-              duration: 0.5,
+              duration: 0.6,
               ease: [0.76, 0, 0.24, 1],
-              delay: direction === "out" ? 0.1 : 0,
+              delay: direction === "out" ? 0 : 0.1,
             }}
           >
             {/* Diagonal stripe accent */}
@@ -78,12 +80,12 @@ const BroadcastTransition = ({ isActive, direction = "in" }: BroadcastTransition
           {/* Center logo burst */}
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: direction === "out" ? 1 : 0, scale: direction === "out" ? 1 : 0 }}
+            animate={{ opacity: direction === "in" ? 1 : 0, scale: direction === "in" ? 1 : 0 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{
               duration: 0.4,
-              delay: 0.3,
+              delay: direction === "out" ? 0 : 0.3,
               ease: [0.34, 1.56, 0.64, 1],
             }}
           >

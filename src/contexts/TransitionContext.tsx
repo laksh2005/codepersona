@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 interface TransitionContextType {
   isTransitioning: boolean;
-  navigateWithTransition: (to: string) => void;
+  transitionDirection: "in" | "out";
+  navigateWithTransition: (to: string, direction?: "in" | "out") => void;
+  navigateWithoutTransition: (to: string) => void;
+  triggerTransition: (direction: "in" | "out", duration?: number) => Promise<void>;
 }
 
 const TransitionContext = createContext<TransitionContextType | undefined>(undefined);
@@ -22,9 +25,11 @@ interface TransitionProviderProps {
 
 export const TransitionProvider = ({ children }: TransitionProviderProps) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState<"in" | "out">("in");
   const navigate = useNavigate();
 
-  const navigateWithTransition = useCallback((to: string) => {
+  const navigateWithTransition = useCallback((to: string, direction: "in" | "out" = "in") => {
+    setTransitionDirection(direction);
     setIsTransitioning(true);
     
     // Wait for transition animation to cover screen, then navigate
@@ -37,8 +42,30 @@ export const TransitionProvider = ({ children }: TransitionProviderProps) => {
     }, 500);
   }, [navigate]);
 
+  const navigateWithoutTransition = useCallback((to: string) => {
+    navigate(to);
+  }, [navigate]);
+
+  const triggerTransition = useCallback(async (direction: "in" | "out", duration: number = 800) => {
+    setTransitionDirection(direction);
+    setIsTransitioning(true);
+    
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        resolve();
+      }, duration);
+    });
+  }, []);
+
   return (
-    <TransitionContext.Provider value={{ isTransitioning, navigateWithTransition }}>
+    <TransitionContext.Provider value={{ 
+      isTransitioning, 
+      transitionDirection,
+      navigateWithTransition,
+      navigateWithoutTransition,
+      triggerTransition 
+    }}>
       {children}
     </TransitionContext.Provider>
   );

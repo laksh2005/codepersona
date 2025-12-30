@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Github, ArrowRight, Sparkles, Moon, Sun, Globe, Linkedin, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "next-themes";
 import TetrisBackground from "@/components/ConstellationBackground";
 import { useTransition } from "@/contexts/TransitionContext";
+import LoadingState from "@/components/journey/LoadingState";
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg
@@ -25,15 +26,25 @@ const XIcon = ({ className }: { className?: string }) => (
 const Index = () => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoadingPage, setShowLoadingPage] = useState(false);
   const [keystrokeCount, setKeystrokeCount] = useState(0);
-  const { navigateWithTransition } = useTransition();
+  const { navigateWithTransition, navigateWithoutTransition, triggerTransition } = useTransition();
   const { theme, setTheme } = useTheme();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (username.trim()) {
       setIsLoading(true);
-      navigateWithTransition(`/${username.trim()}`);
+      setShowLoadingPage(true);
+      
+      // Show loading page for 2-3 seconds
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
+      // Trigger reverse broadcast transition
+      await triggerTransition("out", 800);
+      
+      // Navigate to journey page (without transition since we already did it)
+      navigateWithoutTransition(`/${username.trim()}`);
     }
   };
 
@@ -43,8 +54,27 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      <TetrisBackground keystrokeCount={keystrokeCount} />
+    <>
+      <AnimatePresence mode="wait">
+        {showLoadingPage ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <LoadingState username={username.trim()} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="main"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen bg-background relative overflow-hidden"
+          >
+            <TetrisBackground keystrokeCount={keystrokeCount} />
       
       {/* <div className="absolute inset-0 bg-grid-pattern opacity-50" /> */}
 
@@ -189,7 +219,10 @@ const Index = () => {
           </div>
         </motion.footer>
       </div>
-    </div>
+    </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { useTransition } from "@/contexts/TransitionContext";
 import { cn } from "@/lib/utils";
+import { useEffect, useRef } from "react";
 
 import HeroSection from "@/components/journey/HeroSection";
 import PersonaSection from "@/components/journey/PersonaSection";
@@ -101,9 +102,10 @@ export interface JourneyData {
 
 const JourneyPage = () => {
   const { username } = useParams<{ username: string }>();
-  const { navigateWithTransition } = useTransition();
+  const { navigateWithTransition, triggerTransition } = useTransition();
   const { theme, setTheme } = useTheme();
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+  const hasTriggeredTransition = useRef(false);
 
   const { data: journey, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["journey", username],
@@ -128,6 +130,17 @@ const JourneyPage = () => {
     },
   });
 
+  // Trigger reverse transition when data loads
+  useEffect(() => {
+    if (!isLoading && journey && !hasTriggeredTransition.current) {
+      hasTriggeredTransition.current = true;
+      // Small delay to ensure smooth transition
+      setTimeout(() => {
+        triggerTransition("out", 600);
+      }, 100);
+    }
+  }, [isLoading, journey, triggerTransition]);
+
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
@@ -150,11 +163,10 @@ const JourneyPage = () => {
       <div className="fixed inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
       <div className="fixed inset-0 bg-radial-fade pointer-events-none" />
 
-      {/* Floating Navbar */}
       <motion.nav
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-6 right-6 z-50"
+        className="fixed top-6 z-50 mx-auto left-0 right-0 w-fit"
       >
         <div className="bg-background/80 backdrop-blur-md border rounded-xl shadow-lg p-2 flex gap-2">
           <Button

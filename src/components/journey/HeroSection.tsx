@@ -80,7 +80,7 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
     month: "long",
     year: "numeric",
   });
-  // Compute lifetime total commits safely
+  // Compute lifetime total contributions (GitHub contribution calendar data)
   const totalCommits = contributions.years && contributions.years.length > 0
     ? contributions.years.reduce((sum, year) => sum + year.contributions, 0)
     : (contributions.total ?? 0);
@@ -96,64 +96,30 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
 
   return (
     <section className="relative container mx-auto px-4 py-12 md:py-20">
-      <div className="flex flex-col gap-8 w-full">
-        {/* Top row: Avatar on left, Stats Strip on right */}
-        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8 w-full">
-          {/* Avatar */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="relative flex-shrink-0"
-          >
-            <div className="relative w-28 h-28 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-primary/20">
-              <img
-                src={user.avatar_url}
-                alt={user.name || journey.github_username}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </motion.div>
-
-          {/* Horizontal stats strip - spans the rest */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex-1 w-full"
-          >
-            <div className="flex flex-row items-center justify-center lg:justify-start gap-10 bg-card/80 border border-border rounded-2xl px-8 py-5 shadow-lg">
-              {/* Consistency (lifetime commits) */}
-              <div className="flex flex-col items-center min-w-[90px]">
-                <span className="text-xs text-muted-foreground mb-1 tracking-wide uppercase font-semibold">Commits</span>
-                <span className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                  {consistencyCount}
-                </span>
-              </div>
-              {/* Projects Built (repos) */}
-              <div className="flex flex-col items-center min-w-[90px]">
-                <span className="text-xs text-muted-foreground mb-1 tracking-wide uppercase font-semibold">Projects Built</span>
-                <span className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                  {projectsCount}
-                </span>
-              </div>
-              {/* Community Reach (followers) */}
-              <div className="flex flex-col items-center min-w-[90px]">
-                <span className="text-xs text-muted-foreground mb-1 tracking-wide uppercase font-semibold">Followers</span>
-                <span className="text-3xl md:text-4xl font-bold text-primary tabular-nums">
-                  {communityCount}
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Main content - below the stats row */}
+      {/* Main horizontal row: Avatar | User Info | Stats Bar */}
+      <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-8 w-full">
+        {/* Avatar - Left */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center lg:text-left"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="relative flex-shrink-0"
+        >
+          <div className="relative w-28 h-28 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-primary/20">
+            <img
+              src={user.avatar_url}
+              alt={user.name || journey.github_username}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </motion.div>
+
+        {/* User Info - Middle */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="flex-1 text-center lg:text-left min-w-0"
         >
           <h1 className="font-display text-2xl sm:text-3xl md:text-5xl font-semibold mb-2">
             {user.name || journey.github_username}
@@ -202,6 +168,38 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
             <Download className="w-4 h-4" />
             Save as PDF
           </Button>
+        </motion.div>
+
+        {/* Stats Bar - Right, aligned with name top */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="flex-shrink-0 absolute right-20 top-40"
+        >
+          <div className="flex flex-row items-center gap-8 lg:gap-10 bg-card/80 dark:bg-card/60 backdrop-blur-sm border border-border rounded-2xl px-6 lg:px-8 py-4 lg:py-5 shadow-lg">
+            {/* Lifetime Contributions */}
+            <div className="flex flex-col items-center min-w-[80px] lg:min-w-[90px]">
+              <span className="text-xs text-muted-foreground mb-1 tracking-wide uppercase font-semibold">Contributions</span>
+              <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-primary tabular-nums">
+                {consistencyCount}
+              </span>
+            </div>
+            {/* Projects Built */}
+            <div className="flex flex-col items-center min-w-[80px] lg:min-w-[90px]">
+              <span className="text-xs text-muted-foreground mb-1 tracking-wide uppercase font-semibold">Projects Built</span>
+              <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-primary tabular-nums">
+                {projectsCount}
+              </span>
+            </div>
+            {/* Followers */}
+            <div className="flex flex-col items-center min-w-[80px] lg:min-w-[90px]">
+              <span className="text-xs text-muted-foreground mb-1 tracking-wide uppercase font-semibold">Followers</span>
+              <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-primary tabular-nums">
+                {communityCount}
+              </span>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
