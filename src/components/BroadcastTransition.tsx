@@ -116,7 +116,8 @@ const BroadcastTransition = ({ isActive }: BroadcastTransitionProps) => {
                 ease: [0.34, 1.56, 0.64, 1],
               }}
             >
-              <Github className="w-12 h-12 text-primary" />
+              {/* <Github className="w-12 h-12 text-primary" /> */}
+              <img src={"/blackbg.png"} className="w-12 h-12 text-primary" />
             </motion.div>
           </motion.div>
 

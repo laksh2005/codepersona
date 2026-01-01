@@ -35,14 +35,16 @@ const Index = () => {
     e.preventDefault();
     if (username.trim()) {
       setIsLoading(true);
+      // Show transition immediately
+      await triggerTransition("in", 1000);
       setShowLoadingPage(true);
-      
+
       // Show loading page for 2-3 seconds
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      
+      // await new Promise(resolve => setTimeout(resolve, 2500));
+
       // Trigger reverse broadcast transition
-      await triggerTransition("out", 800);
-      
+      await triggerTransition("out", 1000);
+
       // Navigate to journey page (without transition since we already did it)
       navigateWithoutTransition(`/${username.trim()}`);
     }
