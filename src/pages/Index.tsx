@@ -169,7 +169,7 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-muted-foreground text-sm"
+            className="text-muted-foreground text-sm text-centre"
           >
             get yours at <span className="font-bold text-primary">codepersona.app/your-github-username</span>
           </motion.p>

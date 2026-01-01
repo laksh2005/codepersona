@@ -13,7 +13,7 @@ import type { JourneyData } from "@/pages/JourneyPage";
 /* =======================
    Animated counter hook
 ======================= */
-function useCountUp(to: number, duration = 1200) {
+function useCountUp(to: number, duration = 4000) {
   const [count, setCount] = useState(0);
   const raf = useRef<number | null>(null);
 
@@ -156,7 +156,7 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
           <div className="flex items-center gap-10 rounded-2xl bg-card/70 border border-border px-8 py-5 shadow-md">
             <div className="flex flex-col items-center">
               <span className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-                Projects
+                Public Repos
               </span>
               <span className="text-3xl font-semibold text-primary tabular-nums">
                 {projectsCount}
