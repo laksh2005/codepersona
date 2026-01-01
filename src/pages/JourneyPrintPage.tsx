@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import html2pdf from "html2pdf.js";
 import { supabase } from "@/integrations/supabase/client";
 import type { JourneyData } from "./JourneyPage";
 import LoadingState from "@/components/journey/LoadingState";
@@ -31,8 +32,31 @@ const JourneyPrintPage = () => {
   useEffect(() => {
     if (journey) {
       setTimeout(() => {
-        window.print();
-      }, 300);
+        const element = document.getElementById("print-content");
+        if (element) {
+          html2pdf()
+            .set({
+              margin: 0,
+              filename: `${journey.github_username}-code-persona.pdf`,
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: { scale: 2 },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+              pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+              html2canvas: { scale: 2, useCORS: true },
+            })
+            .from(element)
+            .toPdf()
+            .get('pdf')
+            .then(pdf => {
+              // Scale to fit one page
+              const totalPages = pdf.internal.getNumberOfPages();
+              if (totalPages > 1) {
+                pdf.deletePage(2);
+              }
+            })
+            .save();
+        }
+      }, 500);
     }
   }, [journey]);
 
@@ -56,7 +80,50 @@ const JourneyPrintPage = () => {
 
   return (
     <div className="min-h-screen bg-white text-black flex justify-center items-start py-8">
-      <div className="w-full max-w-[800px] px-8 text-sm leading-relaxed">
+      <style>{`
+        #print-content {
+          font-size: 12px !important;
+          line-height: 1.5 !important;
+          color: #111 !important;
+          background: #fafbfc !important;
+          border: 1.5px solid #e0e0e0 !important;
+          border-radius: 12px !important;
+          margin: 0 auto !important;
+          padding: 32px 32px 24px 32px !important;
+          box-sizing: border-box !important;
+          text-align: left !important;
+          box-shadow: 0 2px 12px 0 #0001 !important;
+        }
+        #print-content h1, #print-content h2, #print-content h3, #print-content h4 {
+          color: #000 !important;
+          font-weight: bold !important;
+          margin-top: 1.2em !important;
+          margin-bottom: 0.5em !important;
+        }
+        #print-content h1 { font-size: 1.6rem !important; text-align: center !important; margin-bottom: 0.7rem; }
+        #print-content h2 { font-size: 1.15rem !important; margin-bottom: 0.4rem; }
+        #print-content p { margin-bottom: 0.35rem !important; }
+        #print-content section { margin-bottom: 1.1rem !important; }
+        #print-content header { margin-bottom: 1.2rem !important; border-bottom: 1px solid #e0e0e0 !important; padding-bottom: 0.7rem !important; }
+        #print-content .section-title { margin-top: 1.2em !important; }
+        @media print {
+          html, body {
+            width: 210mm;
+            height: 297mm;
+            margin: 0;
+            padding: 0;
+            background: #fff !important;
+          }
+          #print-content {
+            width: 190mm;
+            min-height: 277mm;
+            box-sizing: border-box;
+            page-break-after: avoid;
+          }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+      <div id="print-content" className="w-full max-w-[800px] text-sm leading-relaxed">
         <header className="mb-4 border-b pb-3">
           <h1 className="text-2xl font-semibold mb-1">Code Persona Report</h1>
           <p className="text-xs text-gray-600">
