@@ -12,6 +12,14 @@ interface PersonaSectionProps {
   compact?: boolean;
 }
 
+// Helper function to trim by full stops
+const trimBySentence = (text: string, limit: number) => {
+  if (!text) return "";
+  const sentences = text.split(/(?<=[.!?])\s+/); // Splits by punctuation followed by space
+  if (sentences.length <= limit) return text;
+  return sentences.slice(0, limit).join(" ");
+};
+
 const PersonaSection = ({ persona, className, compact = false }: PersonaSectionProps) => {
   if (compact) {
     return (
@@ -33,10 +41,13 @@ const PersonaSection = ({ persona, className, compact = false }: PersonaSectionP
             <div className="space-y-2">
               {persona.insights.slice(0, 3).map((insight, index) => (
                 <div key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
-                   <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-[10px] font-bold text-primary">{index + 1}</span>
-                   </div>
-                   <p className="line-clamp-2 leading-tight">{insight}</p>
+                    <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                       <span className="text-[10px] font-bold text-primary">{index + 1}</span>
+                    </div>
+                    {/* Compact mode: Trimmed to 1 sentence */}
+                    <p className="line-clamp-2 leading-tight">
+                      {trimBySentence(insight, 1)}
+                    </p>
                 </div>
               ))}
             </div>
@@ -82,7 +93,7 @@ const PersonaSection = ({ persona, className, compact = false }: PersonaSectionP
             </h3>
           </motion.div>
 
-          {/* Coding Style */}
+          {/* Coding Style - Trimmed to 3 sentences */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -92,13 +103,11 @@ const PersonaSection = ({ persona, className, compact = false }: PersonaSectionP
           >
             <p className="text-sm text-muted-foreground mb-1">Coding Approach</p>
             <p className="text-foreground text-sm leading-relaxed">
-              {persona.codingStyle.length > 300 
-                ? persona.codingStyle.slice(0, 300).trim() + "..." 
-                : persona.codingStyle}
+              {trimBySentence(persona.codingStyle, 3)}
             </p>
           </motion.div>
 
-          {/* Insights */}
+          {/* Insights - Trimmed to 1 sentence per point */}
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
               Key Strengths
@@ -116,7 +125,7 @@ const PersonaSection = ({ persona, className, compact = false }: PersonaSectionP
                   <span className="text-xs font-bold text-primary">{index + 1}</span>
                 </div>
                 <p className="text-foreground text-sm leading-relaxed">
-                  {insight.length > 150 ? insight.slice(0, 150).trim() + "..." : insight}
+                  {trimBySentence(insight, 1)}
                 </p>
               </motion.div>
             ))}
