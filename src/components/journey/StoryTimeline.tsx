@@ -18,6 +18,10 @@ interface StoryTimelineProps {
 }
 
 const StoryTimeline = ({ story, onRepoClick, className, compact = false }: StoryTimelineProps) => {
+  // 1. Create a reversed copy of the phases array
+  // We use the spread operator [...] to avoid mutating the original prop
+  const reversedPhases = [...story.phases].reverse();
+
   if (compact) {
      return (
       <section className={cn("h-full flex flex-col", className)}>
@@ -35,7 +39,8 @@ const StoryTimeline = ({ story, onRepoClick, className, compact = false }: Story
            <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-border" />
 
            <div className="space-y-4">
-             {story.phases.slice(0, 3).map((phase, index) => (
+             {/* 2. Map over the reversedPhases instead of story.phases */}
+             {reversedPhases.slice(0, 3).map((phase, index) => (
                 <div key={index} className="relative pl-4">
                    <div className="absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full bg-background border-2 border-primary" />
                    <div>
@@ -77,7 +82,8 @@ const StoryTimeline = ({ story, onRepoClick, className, compact = false }: Story
         {/* Timeline line */}
         <div className="absolute left-8 top-0 bottom-0 w-0.5 timeline-line hidden md:block" />
 
-        {story.phases.map((phase, index) => (
+        {/* 3. Map over reversedPhases here as well */}
+        {reversedPhases.map((phase, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, x: -30 }}
@@ -93,7 +99,7 @@ const StoryTimeline = ({ story, onRepoClick, className, compact = false }: Story
 
             <div className="card-cinematic group hover:border-primary/50 transition-all duration-300 shadow-soft">
               {/* Period badge */}
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-4">
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mb-4">
                 {phase.period}
               </div>
 
