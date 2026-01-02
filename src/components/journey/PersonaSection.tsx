@@ -74,9 +74,9 @@ const PersonaSection = ({ persona, className, compact = false }: PersonaSectionP
               <h2 className="font-display text-2xl font-semibold text-foreground">
                 Developer Profile
               </h2>
-              <p className="text-sm text-muted-foreground">
+              {/* <p className="text-sm text-muted-foreground">
                 AI-analyzed professional identity
-              </p>
+              </p> */}
             </div>
           </div>
 

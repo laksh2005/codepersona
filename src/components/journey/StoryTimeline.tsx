@@ -17,15 +17,19 @@ interface StoryTimelineProps {
   compact?: boolean;
 }
 
-const StoryTimeline = ({ story, onRepoClick, className, compact = false }: StoryTimelineProps) => {
-  // 1. Create a reversed copy of the phases array
-  // We use the spread operator [...] to avoid mutating the original prop
+const StoryTimeline = ({
+  story,
+  onRepoClick,
+  className,
+  compact = false,
+}: StoryTimelineProps) => {
+  // Reverse phases to show most recent first
   const reversedPhases = [...story.phases].reverse();
 
   if (compact) {
-     return (
+    return (
       <section className={cn("h-full flex flex-col", className)}>
-         <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3">
           <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
             <History className="w-4 h-4 text-secondary" />
           </div>
@@ -35,25 +39,29 @@ const StoryTimeline = ({ story, onRepoClick, className, compact = false }: Story
         </div>
 
         <div className="flex-1 relative pl-4">
-           {/* Line */}
-           <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-border" />
+          <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-border" />
 
-           <div className="space-y-4">
-             {/* 2. Map over the reversedPhases instead of story.phases */}
-             {reversedPhases.slice(0, 3).map((phase, index) => (
-                <div key={index} className="relative pl-4">
-                   <div className="absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full bg-background border-2 border-primary" />
-                   <div>
-                      <span className="text-xs font-medium text-primary block mb-0.5">{phase.period}</span>
-                      <h4 className="font-medium text-foreground text-sm line-clamp-1">{phase.title}</h4>
-                      <p className="text-xs text-muted-foreground line-clamp-1">{phase.significance}</p>
-                   </div>
+          <div className="space-y-4">
+            {reversedPhases.slice(0, 3).map((phase, index) => (
+              <div key={index} className="relative pl-4">
+                <div className="absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full bg-background border-2 border-primary" />
+                <div>
+                  <span className="text-xs font-medium text-primary block mb-0.5">
+                    {phase.period}
+                  </span>
+                  <h4 className="font-medium text-foreground text-sm line-clamp-1">
+                    {phase.title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {phase.significance}
+                  </p>
                 </div>
-             ))}
-           </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
-     );
+    );
   }
 
   return (
@@ -70,19 +78,19 @@ const StoryTimeline = ({ story, onRepoClick, className, compact = false }: Story
             <History className="w-6 h-6 text-secondary" />
           </div>
         </div>
+
         <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground mb-4">
           Career Timeline
         </h2>
+
         <p className="text-muted-foreground max-w-xl mx-auto">
-          Key milestones and growth phases in your development journey
+          Key milestones and observable phases from your activity
         </p>
       </motion.div>
 
       <div className="relative max-w-3xl mx-auto">
-        {/* Timeline line */}
         <div className="absolute left-8 top-0 bottom-0 w-0.5 timeline-line hidden md:block" />
 
-        {/* 3. Map over reversedPhases here as well */}
         {reversedPhases.map((phase, index) => (
           <motion.div
             key={index}
@@ -92,13 +100,11 @@ const StoryTimeline = ({ story, onRepoClick, className, compact = false }: Story
             transition={{ duration: 0.6, delay: index * 0.15 }}
             className="relative pl-0 md:pl-20 mb-12 last:mb-0"
           >
-            {/* Timeline dot */}
             <div className="hidden md:flex absolute left-5 top-2 w-6 h-6 rounded-full bg-card border-2 border-primary items-center justify-center">
               <div className="w-2 h-2 rounded-full bg-primary" />
             </div>
 
             <div className="card-cinematic group hover:border-primary/50 transition-all duration-300 shadow-soft">
-              {/* Period badge */}
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mb-4">
                 {phase.period}
               </div>
@@ -111,15 +117,15 @@ const StoryTimeline = ({ story, onRepoClick, className, compact = false }: Story
                 {phase.description}
               </p>
 
-              {/* Significance */}
               <div className="p-3 rounded-lg bg-muted/50 border border-border mb-4">
                 <p className="text-sm text-foreground">
-                  <span className="font-medium text-primary">Impact: </span>
+                  <span className="font-medium text-primary">
+                    Observed Impact:{" "}
+                  </span>
                   {phase.significance}
                 </p>
               </div>
 
-              {/* Key repos */}
               {phase.keyRepos.length > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
