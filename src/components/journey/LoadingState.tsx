@@ -5,8 +5,9 @@ interface LoadingStateProps {
   username: string;
 }
 
+// 1. Updated type to include "final"
 const LoadingState = ({ username }: LoadingStateProps) => {
-  const [reminder, setReminder] = useState<null | "hydrate" | "posture">(null);
+  const [reminder, setReminder] = useState<null | "hydrate" | "posture" | "final">(null);
 
   useEffect(() => {
     const hydrateTimer = setTimeout(() => {
@@ -17,21 +18,24 @@ const LoadingState = ({ username }: LoadingStateProps) => {
       setReminder("posture");
     }, 8000);
 
+    // 2. Added the 11-second timer
+    const finalTimer = setTimeout(() => {
+      setReminder("final");
+    }, 12000);
+
     return () => {
       clearTimeout(hydrateTimer);
       clearTimeout(postureTimer);
+      clearTimeout(finalTimer);
     };
   }, []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
-      {/* Background layers */}
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.06]" />
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent" />
 
-      {/* Content */}
       <div className="relative z-10 text-center px-6">
-        {/* Logo */}
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -47,7 +51,6 @@ const LoadingState = ({ username }: LoadingStateProps) => {
           </motion.div>
         </motion.div>
 
-        {/* Username */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -65,14 +68,12 @@ const LoadingState = ({ username }: LoadingStateProps) => {
           </h1>
         </motion.div>
 
-        {/* Loading + reminders */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
           className="flex flex-col items-center gap-4"
         >
-          {/* Dots */}
           <div className="flex gap-2">
             {[0, 1, 2].map((i) => (
               <motion.span
@@ -89,12 +90,10 @@ const LoadingState = ({ username }: LoadingStateProps) => {
             ))}
           </div>
 
-          {/* Main loading text */}
           <p className="text-sm text-muted-foreground">
             Analyzing repositories, patterns, and signals…
           </p>
 
-          {/* Reminder text */}
           <AnimatePresence mode="wait">
             {reminder && (
               <motion.p
@@ -105,9 +104,10 @@ const LoadingState = ({ username }: LoadingStateProps) => {
                 transition={{ duration: 0.4 }}
                 className="text-sm text-muted-foreground mt-2"
               >
-                {reminder === "hydrate"
-                  ? "A reminder to hydrate yourself"
-                  : "and also to fix your posture"}
+                {/* 3. Updated logic for the new line */}
+                {reminder === "hydrate" && "A reminder to hydrate yourself"}
+                {reminder === "posture" && "and also to fix your posture"}
+                {reminder === "final" && "here we go"}
               </motion.p>
             )}
           </AnimatePresence>

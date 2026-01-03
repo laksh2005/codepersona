@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, ArrowRight, Sparkles, Moon, Sun, Globe, Linkedin, Twitter } from "lucide-react";
+import { Github, ArrowRight, Sparkles, Moon, Sun, Globe, Linkedin, Twitter, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "next-themes";
@@ -186,6 +186,12 @@ const Index = () => {
             made by Laksh Nijhawan
           </p>
           <div className="flex items-center justify-center gap-4">
+            <a
+              href="mailto:lakshnijhawan.work@gmail.com"
+              className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+            >
+              <Mail className="w-4 h-4" />
+            </a>
             <a
               href="https://laksh-nijhawan.vercel.app"
               target="_blank"
