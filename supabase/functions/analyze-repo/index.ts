@@ -80,9 +80,9 @@ serve(async (req) => {
     const languages = languagesResponse.ok ? await languagesResponse.json() : {};
 
     // Generate AI analysis
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     const prompt = `Analyze this GitHub repository in depth:
@@ -114,31 +114,53 @@ Provide a detailed analysis in the following JSON format:
   "improvementSuggestions": ["Array of 3-5 specific, actionable suggestions to improve this project"]
 }
 
-Be insightful and specific. The scores should be justified by the evidence, and suggestions should be practical.`;
+Be insightful and specific. The scores should be justified by the evidence, and suggestions should be practical.
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "You are an expert code reviewer and software architect. Always respond with valid JSON only, no markdown." },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
+You are an expert code reviewer and software architect. Always respond with valid JSON only, no markdown.`;
+
+    const aiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 8192,
+            responseMimeType: "application/json",
+          },
+        }),
+      }
+    );
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("AI Gateway error:", aiResponse.status, errorText);
+      console.error("Gemini API error:", aiResponse.status, errorText);
       throw new Error("Failed to generate AI analysis");
     }
 
     const aiData = await aiResponse.json();
-    let aiContent = aiData.choices[0].message.content;
+    
+    // Handle Gemini API response structure
+    if (!aiData.candidates || !aiData.candidates[0] || !aiData.candidates[0].content) {
+      console.error("Unexpected Gemini API response structure:", aiData);
+      throw new Error("Invalid response from Gemini API");
+    }
+    
+    let aiContent = aiData.candidates[0].content.parts[0].text;
     
     // Clean up the response
     aiContent = aiContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
