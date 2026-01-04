@@ -119,7 +119,7 @@ Be insightful and specific. The scores should be justified by the evidence, and 
 You are an expert code reviewer and software architect. Always respond with valid JSON only, no markdown.`;
 
     const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -149,18 +149,24 @@ You are an expert code reviewer and software architect. Always respond with vali
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error("Gemini API error:", aiResponse.status, errorText);
-      throw new Error("Failed to generate AI analysis");
+      throw new Error(`Failed to generate AI analysis: ${errorText}`);
     }
 
     const aiData = await aiResponse.json();
     
     // Handle Gemini API response structure
     if (!aiData.candidates || !aiData.candidates[0] || !aiData.candidates[0].content) {
-      console.error("Unexpected Gemini API response structure:", aiData);
+      console.error("Unexpected Gemini API response structure:", JSON.stringify(aiData));
       throw new Error("Invalid response from Gemini API");
     }
     
-    let aiContent = aiData.candidates[0].content.parts[0].text;
+    const parts = aiData.candidates[0].content.parts;
+    if (!parts || !parts[0] || !parts[0].text) {
+      console.error("Unexpected Gemini API response structure - missing text:", JSON.stringify(aiData));
+      throw new Error("Invalid response from Gemini API - missing text content");
+    }
+    
+    let aiContent = parts[0].text;
     
     // Clean up the response
     aiContent = aiContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
