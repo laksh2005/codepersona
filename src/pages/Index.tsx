@@ -174,6 +174,15 @@ const Index = () => {
             get yours at <span className="font-bold text-primary">codepersona.app/your-github-username</span>
           </motion.p>
 
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-muted-foreground text-xs pt-10 text-red-300 text-centre"
+          >
+            services down due to very high traffic, will resume shortly, when this text disappears
+          </motion.p>
+
         </main>
 
         <motion.footer
