@@ -20,7 +20,8 @@ import CareerProjection from "@/components/journey/CareerProjection";
 import LoadingState from "@/components/journey/LoadingState";
 import ErrorState from "@/components/journey/ErrorState";
 import RepoModal from "@/components/journey/RepoModal";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface JourneyData {
   github_username: string;
@@ -98,6 +99,11 @@ export interface JourneyData {
     learningPath: string[];
     prediction: string;
   };
+  cached?: boolean;
+  rateLimited?: boolean;
+  last_generated_at?: string;
+  hours_until_regenerate?: number | null;
+  message?: string;
 }
 
 const JourneyPage = () => {
@@ -105,20 +111,28 @@ const JourneyPage = () => {
   const { navigateWithTransition, triggerTransition } = useTransition();
   const { theme, setTheme } = useTheme();
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+  const [forceRegenerate, setForceRegenerate] = useState(false);
   const hasTriggeredTransition = useRef(false);
 
   const { data: journey, isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ["journey", username],
+    queryKey: ["journey", username, forceRegenerate],
     queryFn: async (): Promise<JourneyData> => {
       const { data, error } = await supabase.functions.invoke("github-journey", {
-        body: { username },
+        body: { username, forceRegenerate: forceRegenerate || undefined },
       });
 
       if (error) throw error;
       if (data?.error) {
         const customError = new Error(data.error);
         (customError as any).errorType = data.errorType;
+        if (data.errorType === "RATE_LIMITED") {
+          toast.error(data.error || "Rate limited: Please wait 72 hours before regenerating.");
+        }
         throw customError;
+      }
+      // Reset forceRegenerate after successful fetch
+      if (forceRegenerate) {
+        setForceRegenerate(false);
       }
       return data;
     },
@@ -129,6 +143,39 @@ const JourneyPage = () => {
       return failureCount < 1;
     },
   });
+
+  // Check if regenerate is allowed (72 hours must have passed)
+  const canRegenerate = useMemo(() => {
+    if (!journey?.last_generated_at) return true; // New user, can regenerate
+    const hoursUntilRegenerate = journey.hours_until_regenerate;
+    return hoursUntilRegenerate === null || hoursUntilRegenerate <= 0;
+  }, [journey]);
+
+  // Handle regenerate (forces new AI generation)
+  const handleRegenerate = () => {
+    if (!canRegenerate) {
+      const hoursLeft = journey?.hours_until_regenerate;
+      if (hoursLeft) {
+        toast.error(`You can regenerate your code persona after ${hoursLeft} more hour${hoursLeft > 1 ? 's' : ''}.`);
+      }
+      return;
+    }
+    setForceRegenerate(true);
+    refetch();
+    toast.info("Regenerating journey... This may take a moment.");
+  };
+
+  // Get tooltip message for regenerate button
+  const getRegenerateTooltip = () => {
+    if (canRegenerate) {
+      return "Regenerate your code persona (forces new AI generation)";
+    }
+    const hoursLeft = journey?.hours_until_regenerate;
+    if (hoursLeft) {
+      return `You can regenerate your code persona after ${hoursLeft} more hour${hoursLeft > 1 ? 's' : ''}. If you think your GitHub was updated, please wait.`;
+    }
+    return "You can regenerate your code persona after 72 hours. If you think your GitHub was updated, please wait.";
+  };
 
   // Trigger reverse transition when data loads
   useEffect(() => {
@@ -179,16 +226,25 @@ const JourneyPage = () => {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="w-px h-6 bg-border my-auto" />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg"
-            title="Refresh Data"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`} />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleRegenerate}
+                disabled={isRefetching || !canRegenerate}
+                className={cn(
+                  "text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg",
+                  !canRegenerate && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="text-sm">{getRegenerateTooltip()}</p>
+            </TooltipContent>
+          </Tooltip>
           <Button
             variant="ghost"
             size="icon"

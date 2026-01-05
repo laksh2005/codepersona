@@ -39,7 +39,7 @@ serve(async (req) => {
   }
 
   try {
-    const { username } = await req.json();
+    const { username, forceRegenerate } = await req.json();
     
     if (!username) {
       throw new Error("Username is required");
@@ -49,13 +49,99 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check for existing cached data
+    // Constants for caching and rate limiting
+    const CACHE_EXPIRY_DAYS = 14; // Cache expires after 14 days
+    const RATE_LIMIT_HOURS = 72; // One generation per 72 hours per username
+
+    // Check for existing cached data FIRST (before any API calls)
     const { data: existingJourney } = await supabase
       .from("github_journeys")
       .select("*")
       .eq("github_username", username.toLowerCase())
       .single();
 
+    // Helper function to check if cache is valid
+    const isCacheValid = (journey: any): boolean => {
+      if (!journey) return false;
+      if (forceRegenerate) return false;
+      
+      const daysSinceUpdate = (Date.now() - new Date(journey.updated_at).getTime()) / (1000 * 60 * 60 * 24);
+      return daysSinceUpdate < CACHE_EXPIRY_DAYS;
+    };
+
+    // Helper function to check rate limiting (applies to both normal requests and regenerate)
+    const isRateLimited = (journey: any): boolean => {
+      if (!journey?.updated_at) return false;
+      
+      const hoursSinceGeneration = (Date.now() - new Date(journey.updated_at).getTime()) / (1000 * 60 * 60);
+      return hoursSinceGeneration < RATE_LIMIT_HOURS;
+    };
+
+    // Helper function to get hours until regeneration is allowed
+    const getHoursUntilRegenerate = (journey: any): number | null => {
+      if (!journey?.updated_at) return null;
+      const hoursSinceGeneration = (Date.now() - new Date(journey.updated_at).getTime()) / (1000 * 60 * 60);
+      const hoursRemaining = RATE_LIMIT_HOURS - hoursSinceGeneration;
+      return hoursRemaining > 0 ? Math.ceil(hoursRemaining) : null;
+    };
+
+    // AGGRESSIVE CACHING: Return cached data immediately if valid
+    if (existingJourney && isCacheValid(existingJourney)) {
+      const hoursUntilRegenerate = getHoursUntilRegenerate(existingJourney);
+      return new Response(JSON.stringify({
+        github_username: username.toLowerCase(),
+        github_data: existingJourney.github_data,
+        ai_persona: existingJourney.ai_persona,
+        ai_story: existingJourney.ai_story,
+        ai_tech_evolution: existingJourney.ai_tech_evolution,
+        ai_skills: existingJourney.ai_skills,
+        ai_achievements: existingJourney.ai_achievements,
+        ai_career_projection: existingJourney.ai_career_projection,
+        cached: true, // Indicate this is from cache
+        last_generated_at: existingJourney.updated_at,
+        hours_until_regenerate: hoursUntilRegenerate,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Rate limiting check: If recently generated, return cached data (even if expired)
+    // This applies to both normal requests AND regenerate requests
+    if (existingJourney && isRateLimited(existingJourney)) {
+      const hoursUntilRegenerate = getHoursUntilRegenerate(existingJourney);
+      // If forceRegenerate was requested but rate limited, return error
+      if (forceRegenerate) {
+        return new Response(JSON.stringify({
+          error: "Rate limited: You can regenerate your code persona after 72 hours. If you think your GitHub was updated, please wait.",
+          errorType: "RATE_LIMITED",
+          last_generated_at: existingJourney.updated_at,
+          hours_until_regenerate: hoursUntilRegenerate,
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Return cached data even if expired, to respect rate limit
+      return new Response(JSON.stringify({
+        github_username: username.toLowerCase(),
+        github_data: existingJourney.github_data,
+        ai_persona: existingJourney.ai_persona,
+        ai_story: existingJourney.ai_story,
+        ai_tech_evolution: existingJourney.ai_tech_evolution,
+        ai_skills: existingJourney.ai_skills,
+        ai_achievements: existingJourney.ai_achievements,
+        ai_career_projection: existingJourney.ai_career_projection,
+        cached: true,
+        rateLimited: true,
+        last_generated_at: existingJourney.updated_at,
+        hours_until_regenerate: hoursUntilRegenerate,
+        message: "Rate limited: Please wait before regenerating. Use 'Regenerate' button to force update after 72 hours.",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Only fetch GitHub data if cache is invalid/expired or forceRegenerate
     // Fetch GitHub data with authentication to avoid rate limits
     const githubToken = Deno.env.get("GITHUB_TOKEN");
     const githubHeaders: Record<string, string> = {
@@ -234,8 +320,10 @@ serve(async (req) => {
       },
     };
 
-    // Check if we can use cached AI data
-    if (existingJourney && existingJourney.last_github_hash === currentHash) {
+    // Check if GitHub data hasn't changed (hash match) and we have valid cache
+    // This is a secondary check after fetching GitHub data
+    if (existingJourney && existingJourney.last_github_hash === currentHash && isCacheValid(existingJourney)) {
+      // GitHub data unchanged and cache still valid, return cached AI data
       return new Response(JSON.stringify({
         github_username: username.toLowerCase(),
         github_data,
@@ -245,6 +333,7 @@ serve(async (req) => {
         ai_skills: existingJourney.ai_skills,
         ai_achievements: existingJourney.ai_achievements,
         ai_career_projection: existingJourney.ai_career_projection,
+        cached: true,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -392,7 +481,8 @@ You are an expert developer career analyst. Always respond with valid JSON only,
       throw new Error("Failed to parse AI response");
     }
 
-    // Save to database
+    // Save to database with timestamp tracking
+    const now = new Date().toISOString();
     const journeyData = {
       github_username: username.toLowerCase(),
       github_data,
@@ -403,6 +493,7 @@ You are an expert developer career analyst. Always respond with valid JSON only,
       ai_achievements: aiResult.achievements,
       ai_career_projection: aiResult.careerProjection,
       last_github_hash: currentHash,
+      updated_at: now, // Explicitly set updated_at for rate limiting
     };
 
     if (existingJourney) {
@@ -416,7 +507,12 @@ You are an expert developer career analyst. Always respond with valid JSON only,
         .insert(journeyData);
     }
 
-    return new Response(JSON.stringify(journeyData), {
+    return new Response(JSON.stringify({
+      ...journeyData,
+      cached: false,
+      last_generated_at: now,
+      hours_until_regenerate: RATE_LIMIT_HOURS,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
