@@ -3,17 +3,17 @@ import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PersonaSectionProps {
-  persona: {
-    title: string;
-    insights: string[];
-    codingStyle: string;
-  };
+  persona?: {
+    title?: string;
+    insights?: string[];
+    codingStyle?: string;
+  } | null;
   className?: string;
   compact?: boolean;
 }
 
 // Helper function to trim by full stops
-const trimBySentence = (text: string, limit: number) => {
+const trimBySentence = (text: string | undefined | null, limit: number) => {
   if (!text) return "";
   const sentences = text.split(/(?<=[.!?])\s+/); // Splits by punctuation followed by space
   if (sentences.length <= limit) return text;
@@ -21,6 +21,16 @@ const trimBySentence = (text: string, limit: number) => {
 };
 
 const PersonaSection = ({ persona, className, compact = false }: PersonaSectionProps) => {
+  if (!persona) {
+    return null;
+  }
+
+  const insights = persona.insights ?? [];
+
+  if (!persona.title && !insights.length && !persona.codingStyle) {
+    return null;
+  }
+
   if (compact) {
     return (
       <section className={cn("h-full flex flex-col", className)}>
@@ -34,12 +44,14 @@ const PersonaSection = ({ persona, className, compact = false }: PersonaSectionP
          </div>
          
          <div className="flex-1 flex flex-col justify-center">
-            <h3 className="font-display text-xl font-semibold text-foreground italic mb-4 text-center">
-              {persona.title}
-            </h3>
+            {persona.title && (
+              <h3 className="font-display text-xl font-semibold text-foreground italic mb-4 text-center">
+                {persona.title}
+              </h3>
+            )}
             
             <div className="space-y-2">
-              {persona.insights.slice(0, 3).map((insight, index) => (
+              {insights.slice(0, 3).map((insight, index) => (
                 <div key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
                     <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                        <span className="text-[10px] font-bold text-primary">{index + 1}</span>
@@ -88,31 +100,35 @@ const PersonaSection = ({ persona, className, compact = false }: PersonaSectionP
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mb-8"
           >
-            <h3 className="font-display text-2xl md:text-3xl font-semibold text-foreground italic">
-              {persona.title}
-            </h3>
+            {persona.title && (
+              <h3 className="font-display text-2xl md:text-3xl font-semibold text-foreground italic">
+                {persona.title}
+              </h3>
+            )}
           </motion.div>
 
           {/* Coding Style - Trimmed to 3 sentences */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mb-8 p-4 rounded-xl bg-muted/50 border border-border"
-          >
-            <p className="text-sm text-muted-foreground mb-1">Coding Approach</p>
-            <p className="text-foreground text-sm leading-relaxed">
-              {trimBySentence(persona.codingStyle, 3)}
-            </p>
-          </motion.div>
+          {persona.codingStyle && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mb-8 p-4 rounded-xl bg-muted/50 border border-border"
+            >
+              <p className="text-sm text-muted-foreground mb-1">Coding Approach</p>
+              <p className="text-foreground text-sm leading-relaxed">
+                {trimBySentence(persona.codingStyle, 3)}
+              </p>
+            </motion.div>
+          )}
 
           {/* Insights - Trimmed to 1 sentence per point */}
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
               Key Strengths
             </p>
-            {persona.insights.slice(0, 3).map((insight, index) => (
+            {insights.slice(0, 3).map((insight, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: -20 }}

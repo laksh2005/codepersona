@@ -5,15 +5,15 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface AchievementsProps {
-  achievements: {
-    badges: Array<{
+  achievements?: {
+    badges?: Array<{
       name: string;
       icon: string;
       description: string;
       reasoning: string;
       rarity: "common" | "rare" | "legendary";
     }>;
-  };
+  } | null;
   className?: string;
   compact?: boolean;
 }
@@ -53,6 +53,12 @@ const rarityStyles = {
 };
 
 const Achievements = ({ achievements, className, compact = false }: AchievementsProps) => {
+  const badges = achievements?.badges ?? [];
+
+  if (!badges.length) {
+    return null;
+  }
+
   if (compact) {
      return (
       <section className={cn("h-full flex flex-col", className)}>
@@ -66,7 +72,7 @@ const Achievements = ({ achievements, className, compact = false }: Achievements
         </div>
 
         <div className="flex-1 grid grid-cols-4 gap-2 content-start">
-           {achievements.badges.slice(0, 8).map((badge, index) => {
+           {badges.slice(0, 8).map((badge, index) => {
               const IconComponent = iconMap[badge.icon.toLowerCase()] || Trophy;
               const styles = rarityStyles[badge.rarity];
               
@@ -115,7 +121,7 @@ const Achievements = ({ achievements, className, compact = false }: Achievements
 
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {achievements.badges.map((badge, index) => {
+          {badges.map((badge, index) => {
             const IconComponent = iconMap[badge.icon.toLowerCase()] || Trophy;
             const styles = rarityStyles[badge.rarity];
 

@@ -67,13 +67,13 @@ const JourneyPrintPage = () => {
   const { github_data, ai_persona, ai_skills, ai_achievements, ai_career_projection } = journey;
   const { user, repos, contributions, languages } = github_data;
 
-  const primaryLanguages = Object.entries(languages)
+  const primaryLanguages = Object.entries(languages ?? {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4)
     .map(([name]) => name);
 
-  const topSkills = ai_skills.skills.slice(0, 5);
-  const keyBadges = ai_achievements.badges.slice(0, 3);
+  const topSkills = ai_skills?.skills?.slice(0, 5) ?? [];
+  const keyBadges = ai_achievements?.badges?.slice(0, 3) ?? [];
 
   const totalStars = repos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
   const totalRepos = repos.length;
@@ -157,44 +157,60 @@ const JourneyPrintPage = () => {
           )}
         </section>
 
-        <section className="mb-4">
-          <h2 className="text-base font-semibold mb-1">Developer Persona</h2>
-          <p className="font-medium text-gray-900 mb-1">{ai_persona.title}</p>
-          {ai_persona.insights.slice(0, 3).map((insight, index) => (
-            <p key={index} className="text-gray-800">
-              • {insight}
-            </p>
-          ))}
-        </section>
+        {ai_persona && (
+          <section className="mb-4">
+            <h2 className="text-base font-semibold mb-1">Developer Persona</h2>
+            {ai_persona.title && (
+              <p className="font-medium text-gray-900 mb-1">{ai_persona.title}</p>
+            )}
+            {(ai_persona.insights ?? []).slice(0, 3).map((insight, index) => (
+              <p key={index} className="text-gray-800">
+                • {insight}
+              </p>
+            ))}
+          </section>
+        )}
 
-        <section className="mb-4">
-          <h2 className="text-base font-semibold mb-1">Key Skills</h2>
-          {topSkills.map((skill) => (
-            <p key={skill.name} className="text-gray-800">
-              {skill.name}: {skill.score}/100 – {skill.reasoning}
-            </p>
-          ))}
-        </section>
+        {!!topSkills.length && (
+          <section className="mb-4">
+            <h2 className="text-base font-semibold mb-1">Key Skills</h2>
+            {topSkills.map((skill) => (
+              <p key={skill.name} className="text-gray-800">
+                {skill.name}: {skill.score}/100 – {skill.reasoning}
+              </p>
+            ))}
+          </section>
+        )}
 
-        <section className="mb-4">
-          <h2 className="text-base font-semibold mb-1">Notable Achievements</h2>
-          {keyBadges.map((badge) => (
-            <p key={badge.name} className="text-gray-800">
-              {badge.name}: {badge.description} (evidence: {badge.reasoning})
-            </p>
-          ))}
-        </section>
+        {!!keyBadges.length && (
+          <section className="mb-4">
+            <h2 className="text-base font-semibold mb-1">Notable Achievements</h2>
+            {keyBadges.map((badge) => (
+              <p key={badge.name} className="text-gray-800">
+                {badge.name}: {badge.description} (evidence: {badge.reasoning})
+              </p>
+            ))}
+          </section>
+        )}
 
-        <section>
-          <h2 className="text-base font-semibold mb-1">Career Outlook</h2>
-          <p className="text-gray-800">
-            Ideal role: {ai_career_projection.roleAlignment}.
-          </p>
-          <p className="text-gray-800 mt-1">
-            Future focus areas: {ai_career_projection.futureSkills.join(", ")}.
-          </p>
-          <p className="text-gray-800 mt-1">{ai_career_projection.prediction}</p>
-        </section>
+        {ai_career_projection && (
+          <section>
+            <h2 className="text-base font-semibold mb-1">Career Outlook</h2>
+            {ai_career_projection.roleAlignment && (
+              <p className="text-gray-800">
+                Ideal role: {ai_career_projection.roleAlignment}.
+              </p>
+            )}
+            {!!(ai_career_projection.futureSkills ?? []).length && (
+              <p className="text-gray-800 mt-1">
+                Future focus areas: {(ai_career_projection.futureSkills ?? []).join(", ")}.
+              </p>
+            )}
+            {ai_career_projection.prediction && (
+              <p className="text-gray-800 mt-1">{ai_career_projection.prediction}</p>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );

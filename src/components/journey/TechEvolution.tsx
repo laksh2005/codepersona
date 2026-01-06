@@ -3,19 +3,25 @@ import { Layers, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TechEvolutionProps {
-  evolution: {
-    phases: Array<{
+  evolution?: {
+    phases?: Array<{
       period: string;
       focus: string;
       technologies: string[];
       reasoning: string;
     }>;
-  };
+  } | null;
   className?: string;
   compact?: boolean;
 }
 
 const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionProps) => {
+  const phases = evolution?.phases ?? [];
+
+  if (!phases.length) {
+    return null;
+  }
+
   const techColors: Record<string, string> = {
     JavaScript: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
     TypeScript: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
@@ -37,7 +43,11 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
   };
 
   if (compact) {
-    const latestPhase = evolution.phases[evolution.phases.length - 1];
+    const latestPhase = phases[phases.length - 1];
+
+    if (!latestPhase) {
+      return null;
+    }
     return (
       <section className={cn("h-full flex flex-col", className)}>
         <div className="flex items-center gap-2 mb-3">
@@ -98,7 +108,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
 
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {evolution.phases.map((phase, index) => (
+          {phases.map((phase, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -108,7 +118,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
               className="relative"
             >
               {/* Connector arrow (except last) */}
-              {index < evolution.phases.length - 1 && index % 3 !== 2 && (
+              {index < phases.length - 1 && index % 3 !== 2 && (
                 <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10">
                   <ArrowRight className="w-6 h-6 text-muted-foreground/40" />
                 </div>

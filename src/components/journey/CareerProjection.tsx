@@ -3,17 +3,28 @@ import { TrendingUp, Target, BookOpen, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CareerProjectionProps {
-  projection: {
-    futureSkills: string[];
-    roleAlignment: string;
-    learningPath: string[];
-    prediction: string;
-  };
+  projection?: {
+    futureSkills?: string[];
+    roleAlignment?: string;
+    learningPath?: string[];
+    prediction?: string;
+  } | null;
   className?: string;
   compact?: boolean;
 }
 
 const CareerProjection = ({ projection, className, compact = false }: CareerProjectionProps) => {
+  if (!projection) {
+    return null;
+  }
+
+  const futureSkills = projection.futureSkills ?? [];
+  const learningPath = projection.learningPath ?? [];
+
+  if (!projection.prediction && !projection.roleAlignment && !futureSkills.length && !learningPath.length) {
+    return null;
+  }
+
   if (compact) {
     return (
       <section className={cn("h-full flex flex-col", className)}>
@@ -32,14 +43,18 @@ const CareerProjection = ({ projection, className, compact = false }: CareerProj
                <Target className="w-4 h-4 text-accent" />
                <span className="text-xs font-medium text-muted-foreground">Ideal Role</span>
              </div>
-             <p className="font-semibold text-foreground">{projection.roleAlignment}</p>
+             {projection.roleAlignment && (
+               <p className="font-semibold text-foreground">{projection.roleAlignment}</p>
+             )}
           </div>
           
-          <div className="flex-1 p-3 rounded-xl bg-muted/30 border border-border/50 flex flex-col justify-center">
-             <p className="text-sm text-foreground/80 leading-snug line-clamp-3 italic">
-               "{projection.prediction}"
-             </p>
-          </div>
+          {projection.prediction && (
+            <div className="flex-1 p-3 rounded-xl bg-muted/30 border border-border/50 flex flex-col justify-center">
+               <p className="text-sm text-foreground/80 leading-snug line-clamp-3 italic">
+                 "{projection.prediction}"
+               </p>
+            </div>
+          )}
         </div>
       </section>
     );
@@ -69,6 +84,7 @@ const CareerProjection = ({ projection, className, compact = false }: CareerProj
 
       <div className="max-w-4xl mx-auto">
         {/* Main prediction */}
+        {projection.prediction && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -84,6 +100,7 @@ const CareerProjection = ({ projection, className, compact = false }: CareerProj
             {projection.prediction}
           </p>
         </motion.div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Role Alignment */}
@@ -100,9 +117,11 @@ const CareerProjection = ({ projection, className, compact = false }: CareerProj
             <h3 className="font-display font-semibold text-foreground mb-2">
               Ideal Role
             </h3>
-            <p className="text-lg font-medium text-primary mb-2">
-              {projection.roleAlignment}
-            </p>
+            {projection.roleAlignment && (
+              <p className="text-lg font-medium text-primary mb-2">
+                {projection.roleAlignment}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
               Based on your demonstrated strengths
             </p>
@@ -122,8 +141,9 @@ const CareerProjection = ({ projection, className, compact = false }: CareerProj
             <h3 className="font-display font-semibold text-foreground mb-3">
               Growth Areas
             </h3>
+            {!!futureSkills.length && (
             <div className="flex flex-wrap gap-2">
-              {projection.futureSkills.map((skill, index) => (
+              {futureSkills.map((skill, index) => (
                 <motion.span
                   key={skill}
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -136,6 +156,7 @@ const CareerProjection = ({ projection, className, compact = false }: CareerProj
                 </motion.span>
               ))}
             </div>
+            )}
           </motion.div>
 
           {/* Learning Path */}
@@ -152,8 +173,9 @@ const CareerProjection = ({ projection, className, compact = false }: CareerProj
             <h3 className="font-display font-semibold text-foreground mb-3">
               Recommended Path
             </h3>
+            {!!learningPath.length && (
             <ol className="space-y-2">
-              {projection.learningPath.map((step, index) => (
+              {learningPath.map((step, index) => (
                 <motion.li
                   key={index}
                   initial={{ opacity: 0, x: -10 }}
@@ -169,6 +191,7 @@ const CareerProjection = ({ projection, className, compact = false }: CareerProj
                 </motion.li>
               ))}
             </ol>
+            )}
           </motion.div>
         </div>
       </div>

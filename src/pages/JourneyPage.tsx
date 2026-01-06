@@ -55,50 +55,50 @@ export interface JourneyData {
       years: Array<{ year: number; contributions: number }>;
     };
   };
-  ai_persona: {
-    title: string;
-    insights: string[];
-    codingStyle: string;
-  };
-  ai_story: {
-    phases: Array<{
+  ai_persona?: {
+    title?: string;
+    insights?: string[];
+    codingStyle?: string;
+  } | null;
+  ai_story?: {
+    phases?: Array<{
       title: string;
       period: string;
       description: string;
       keyRepos: string[];
       significance: string;
     }>;
-  };
-  ai_tech_evolution: {
-    phases: Array<{
+  } | null;
+  ai_tech_evolution?: {
+    phases?: Array<{
       period: string;
       focus: string;
       technologies: string[];
       reasoning: string;
     }>;
-  };
-  ai_skills: {
-    skills: Array<{
+  } | null;
+  ai_skills?: {
+    skills?: Array<{
       name: string;
       score: number;
       reasoning: string;
     }>;
-  };
-  ai_achievements: {
-    badges: Array<{
+  } | null;
+  ai_achievements?: {
+    badges?: Array<{
       name: string;
       icon: string;
       description: string;
       reasoning: string;
       rarity: "common" | "rare" | "legendary";
     }>;
-  };
-  ai_career_projection: {
-    futureSkills: string[];
-    roleAlignment: string;
-    learningPath: string[];
-    prediction: string;
-  };
+  } | null;
+  ai_career_projection?: {
+    futureSkills?: string[];
+    roleAlignment?: string;
+    learningPath?: string[];
+    prediction?: string;
+  } | null;
   cached?: boolean;
   rateLimited?: boolean;
   last_generated_at?: string;
@@ -167,13 +167,28 @@ const JourneyPage = () => {
 
   // Get tooltip message for regenerate button
   const getRegenerateTooltip = () => {
+    // If we're showing cached AI data, explain that here
+    if (journey?.cached) {
+      const hoursLeft = journey.hours_until_regenerate;
+      if (hoursLeft != null && hoursLeft > 0) {
+        return `This profile is currently served from cached analysis. Regeneration will be available in approximately ${Math.ceil(
+          hoursLeft
+        )} hour${hoursLeft > 1 ? "s" : ""}.`;
+      }
+      return "This profile is currently served from cached analysis. You can regenerate your code persona now.";
+    }
+
     if (canRegenerate) {
       return "Regenerate your code persona (forces new AI generation)";
     }
+
     const hoursLeft = journey?.hours_until_regenerate;
     if (hoursLeft) {
-      return `You can regenerate your code persona after ${hoursLeft} more hour${hoursLeft > 1 ? 's' : ''}. If you think your GitHub was updated, please wait.`;
+      return `You can regenerate your code persona after ${hoursLeft} more hour${
+        hoursLeft > 1 ? "s" : ""
+      }. If you think your GitHub was updated, please wait.`;
     }
+
     return "You can regenerate your code persona after 72 hours. If you think your GitHub was updated, please wait.";
   };
 
@@ -276,12 +291,22 @@ const JourneyPage = () => {
             exit={{ opacity: 0 }}
           >
             <HeroSection journey={journey} />
-            <PersonaSection persona={journey.ai_persona} />
-            <StoryTimeline story={journey.ai_story} onRepoClick={setSelectedRepo} />
-            <TechEvolution evolution={journey.ai_tech_evolution} />
-            <SkillRadar skills={journey.ai_skills} />
-            <Achievements achievements={journey.ai_achievements} />
-            <CareerProjection projection={journey.ai_career_projection} />
+            {journey.ai_persona && <PersonaSection persona={journey.ai_persona} />}
+            {journey.ai_story?.phases && journey.ai_story.phases.length > 0 && (
+              <StoryTimeline story={journey.ai_story} onRepoClick={setSelectedRepo} />
+            )}
+            {journey.ai_tech_evolution?.phases && journey.ai_tech_evolution.phases.length > 0 && (
+              <TechEvolution evolution={journey.ai_tech_evolution} />
+            )}
+            {journey.ai_skills?.skills && journey.ai_skills.skills.length > 0 && (
+              <SkillRadar skills={journey.ai_skills} />
+            )}
+            {journey.ai_achievements?.badges && journey.ai_achievements.badges.length > 0 && (
+              <Achievements achievements={journey.ai_achievements} />
+            )}
+            {journey.ai_career_projection && (
+              <CareerProjection projection={journey.ai_career_projection} />
+            )}
           </motion.div>
         </AnimatePresence>
       </main>

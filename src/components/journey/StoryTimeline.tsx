@@ -3,15 +3,15 @@ import { History, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StoryTimelineProps {
-  story: {
-    phases: Array<{
+  story?: {
+    phases?: Array<{
       title: string;
       period: string;
       description: string;
       keyRepos: string[];
       significance: string;
     }>;
-  };
+  } | null;
   onRepoClick: (repoName: string) => void;
   className?: string;
   compact?: boolean;
@@ -23,8 +23,15 @@ const StoryTimeline = ({
   className,
   compact = false,
 }: StoryTimelineProps) => {
+  const phases = story?.phases ?? [];
+
+  // Nothing to render if there are no phases
+  if (!phases.length) {
+    return null;
+  }
+
   // Reverse phases to show most recent first
-  const reversedPhases = [...story.phases].reverse();
+  const reversedPhases = [...phases].reverse();
 
   if (compact) {
     return (
@@ -126,13 +133,13 @@ const StoryTimeline = ({
                 </p>
               </div>
 
-              {phase.keyRepos.length > 0 && (
+              {phase.keyRepos?.length > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
                     Notable Projects
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {phase.keyRepos.map((repo) => (
+                    {(phase.keyRepos ?? []).map((repo) => (
                       <button
                         key={repo}
                         onClick={() => onRepoClick(repo)}
