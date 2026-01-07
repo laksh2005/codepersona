@@ -22,6 +22,28 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
     return null;
   }
 
+  // Sort phases by date (newest first)
+  // Parse period strings to extract year for sorting
+  const parsePeriodYear = (period: string): number => {
+    // Extract years from period strings like "2019-2020", "Early 2021", "Late 2024 - Early 2025", "Mid 2025 onwards"
+    const yearMatches = period.match(/\b(19|20)\d{2}\b/g);
+    if (yearMatches && yearMatches.length > 0) {
+      // Use the latest year mentioned in the period
+      const years = yearMatches.map(y => parseInt(y, 10));
+      return Math.max(...years);
+    }
+    // Fallback: if no year found, return 0 (will sort to bottom)
+    return 0;
+  };
+
+  // Sort phases by date (newest first)
+  const sortedPhases = [...phases].sort((a, b) => {
+    const yearA = parsePeriodYear(a.period);
+    const yearB = parsePeriodYear(b.period);
+    // Sort descending (newest first)
+    return yearB - yearA;
+  });
+
   const techColors: Record<string, string> = {
     JavaScript: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
     TypeScript: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
@@ -43,7 +65,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
   };
 
   if (compact) {
-    const latestPhase = phases[phases.length - 1];
+    const latestPhase = sortedPhases[0]; // Most recent phase is now first
 
     if (!latestPhase) {
       return null;
@@ -108,7 +130,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
 
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {phases.map((phase, index) => (
+          {sortedPhases.map((phase, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -118,7 +140,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
               className="relative"
             >
               {/* Connector arrow (except last) */}
-              {index < phases.length - 1 && index % 3 !== 2 && (
+              {index < sortedPhases.length - 1 && index % 3 !== 2 && (
                 <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10">
                   <ArrowRight className="w-6 h-6 text-muted-foreground/40" />
                 </div>

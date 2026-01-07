@@ -345,7 +345,15 @@ serve(async (req) => {
       throw new Error("GEMINI_API_KEY is not configured");
     }
 
+    // Get current date for context
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+    const currentDateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+
     const prompt = `You are analyzing a GitHub developer profile. Based on the following data, generate a comprehensive AI interpretation of this developer's journey.
+
+IMPORTANT: The current date is ${currentDateStr} (${currentYear}). When analyzing repository creation dates and project timelines, use this current date as your reference. Do NOT mark any projects as being in the future. All repository dates should be interpreted relative to ${currentYear}.
 
 GitHub User: ${user.name || username}
 Bio: ${user.bio || "Not provided"}
@@ -371,17 +379,18 @@ Generate the following JSON structure with creative, insightful, and narrative i
     "phases": [
       {
         "title": "Phase title like 'The Learning Phase' or 'The Breakthrough Era'",
-        "period": "Time period like '2019-2020' or 'Early 2021'",
+        "period": "Time period like '2019-2020' or 'Early 2021'. IMPORTANT: All periods must be in the past relative to ${currentYear}. Never use future dates.",
         "description": "Narrative description of what was happening in their developer journey during this phase",
         "keyRepos": ["Array of 1-3 repo names that were significant in this phase"],
         "significance": "Why this phase mattered in their overall growth"
       }
     ]
   },
+  NOTE: Order the phases array chronologically from oldest to newest (earliest phase first, most recent phase last). The frontend will automatically display them with newest first.
   "techEvolution": {
     "phases": [
       {
-        "period": "Time period",
+        "period": "Time period (must be in the past, never future dates relative to ${currentYear})",
         "focus": "What they were focused on (e.g., 'Frontend Exploration', 'Full-Stack Expansion')",
         "technologies": ["Key technologies during this phase"],
         "reasoning": "Why this transition happened and what it shows about their growth"
@@ -417,6 +426,10 @@ Generate the following JSON structure with creative, insightful, and narrative i
 }
 
 Be creative, insightful, and narrative. Focus on the "why" and "so what", not just the "what". Make it feel like a personalized career documentary, not a stats dashboard. Include 3-5 phases for the story and tech evolution. Include 5-6 skills. Include 4-6 achievements with a mix of rarities.
+
+IMPORTANT: Order all phase arrays (story.phases and techEvolution.phases) chronologically from oldest to newest (earliest first, most recent last). The frontend will automatically display them with the most recent phases at the top.
+
+CRITICAL REMINDER: The current year is ${currentYear}. All time periods in your response must be in the past. Never describe projects or phases as being in the future (2025, 2026, etc.). All repository creation dates are historical dates, not future dates.
 
 You are an expert developer career analyst. Always respond with valid JSON only, no markdown.`;
 

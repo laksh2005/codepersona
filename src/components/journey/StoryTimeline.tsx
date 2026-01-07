@@ -30,8 +30,27 @@ const StoryTimeline = ({
     return null;
   }
 
-  // Reverse phases to show most recent first
-  const reversedPhases = [...phases].reverse();
+  // Sort phases by date (newest first)
+  // Parse period strings to extract year for sorting
+  const parsePeriodYear = (period: string): number => {
+    // Extract years from period strings like "2019-2020", "Early 2021", "Late 2024 - Early 2025", "Mid 2025 onwards"
+    const yearMatches = period.match(/\b(19|20)\d{2}\b/g);
+    if (yearMatches && yearMatches.length > 0) {
+      // Use the latest year mentioned in the period
+      const years = yearMatches.map(y => parseInt(y, 10));
+      return Math.max(...years);
+    }
+    // Fallback: if no year found, return 0 (will sort to bottom)
+    return 0;
+  };
+
+  // Sort phases by date (newest first), then reverse to ensure newest is at top
+  const sortedPhases = [...phases].sort((a, b) => {
+    const yearA = parsePeriodYear(a.period);
+    const yearB = parsePeriodYear(b.period);
+    // Sort descending (newest first)
+    return yearB - yearA;
+  });
 
   if (compact) {
     return (
@@ -49,7 +68,7 @@ const StoryTimeline = ({
           <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-border" />
 
           <div className="space-y-4">
-            {reversedPhases.slice(0, 3).map((phase, index) => (
+            {sortedPhases.slice(0, 3).map((phase, index) => (
               <div key={index} className="relative pl-4">
                 <div className="absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full bg-background border-2 border-primary" />
                 <div>
@@ -98,7 +117,7 @@ const StoryTimeline = ({
       <div className="relative max-w-3xl mx-auto">
         <div className="absolute left-8 top-0 bottom-0 w-0.5 timeline-line hidden md:block" />
 
-        {reversedPhases.map((phase, index) => (
+        {sortedPhases.map((phase, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, x: -30 }}
