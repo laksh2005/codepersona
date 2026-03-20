@@ -202,7 +202,7 @@ const Index = () => {
               <Mail className="w-4 h-4" />
             </a>
             <a
-              href="https://laksh-nijhawan.vercel.app"
+              href="https://laksh1.me"
               target="_blank"
               rel="noopener noreferrer"
               className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
