@@ -434,7 +434,7 @@ CRITICAL REMINDER: The current year is ${currentYear}. All time periods in your 
 You are an expert developer career analyst. Always respond with valid JSON only, no markdown.`;
 
     const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {

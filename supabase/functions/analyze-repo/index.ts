@@ -119,7 +119,7 @@ Be insightful and specific. The scores should be justified by the evidence, and 
 You are an expert code reviewer and software architect. Always respond with valid JSON only, no markdown.`;
 
     const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
