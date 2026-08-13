@@ -63,7 +63,7 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
   };
 
   return (
-    <section className="container mx-auto px-4 pt-20 pb-14">
+    <section className="container mx-auto max-w-6xl px-6 pt-20 pb-14">
       <div className="flex flex-col lg:flex-row items-start lg:items-center gap-12">
 
         {/* LEFT: Avatar + Identity */}
