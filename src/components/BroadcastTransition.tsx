@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Github } from "lucide-react";
 import { useTransition } from "@/contexts/TransitionContext";
 
 interface BroadcastTransitionProps {
@@ -14,6 +13,7 @@ const BroadcastTransition = ({ isActive }: BroadcastTransitionProps) => {
       {isActive && (
         <motion.div
           className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
+          aria-hidden="true"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -116,8 +116,7 @@ const BroadcastTransition = ({ isActive }: BroadcastTransitionProps) => {
                 ease: [0.34, 1.56, 0.64, 1],
               }}
             >
-              {/* <Github className="w-12 h-12 text-primary" /> */}
-              <img src={"/blackbg.png"} className="w-12 h-12 text-primary" />
+              <img src="/blackbg.png" alt="" className="w-12 h-12" />
             </motion.div>
           </motion.div>
 

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, GitBranch, Loader2, TrendingUp, Zap, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/edgeFunction";
 
 interface RepoModalProps {
   isOpen: boolean;
@@ -12,28 +13,23 @@ interface RepoModalProps {
 }
 
 interface RepoAnalysis {
-  ai_summary: string;
-  maturity_score: number;
-  complexity_score: number;
-  improvement_suggestions: string[];
+  ai_summary: string | null;
+  maturity_score: number | null;
+  complexity_score: number | null;
+  improvement_suggestions: string[] | null;
 }
 
 const RepoModal = ({ isOpen, onClose, repoName, username }: RepoModalProps) => {
   const { data: analysis, isLoading, error } = useQuery({
     queryKey: ["repo-analysis", username, repoName],
-    queryFn: async (): Promise<RepoAnalysis> => {
-      const { data, error } = await supabase.functions.invoke("analyze-repo", {
-        body: { username, repoName },
-      });
-
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => invokeEdgeFunction<RepoAnalysis>(supabase, "analyze-repo", { username, repoName }),
     enabled: isOpen && !!repoName,
     staleTime: 1000 * 60 * 30, // 30 minutes
+    retry: 1,
   });
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number | null) => {
+    if (score == null) return "text-muted-foreground";
     if (score >= 80) return "text-green-400";
     if (score >= 60) return "text-primary";
     if (score >= 40) return "text-accent";
@@ -122,14 +118,14 @@ const RepoModal = ({ isOpen, onClose, repoName, username }: RepoModalProps) => {
                       </div>
                       <div className="flex items-end gap-2">
                         <span className={`text-3xl font-display font-bold ${getScoreColor(analysis.maturity_score)}`}>
-                          {analysis.maturity_score}
+                          {analysis.maturity_score ?? "—"}
                         </span>
                         <span className="text-muted-foreground text-sm mb-1">/100</span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-background mt-2">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
-                          style={{ width: `${analysis.maturity_score}%` }}
+                          style={{ width: `${Math.max(0, Math.min(100, analysis.maturity_score ?? 0))}%` }}
                         />
                       </div>
                     </div>
@@ -141,14 +137,14 @@ const RepoModal = ({ isOpen, onClose, repoName, username }: RepoModalProps) => {
                       </div>
                       <div className="flex items-end gap-2">
                         <span className={`text-3xl font-display font-bold ${getScoreColor(analysis.complexity_score)}`}>
-                          {analysis.complexity_score}
+                          {analysis.complexity_score ?? "—"}
                         </span>
                         <span className="text-muted-foreground text-sm mb-1">/100</span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-background mt-2">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-accent to-secondary transition-all duration-500"
-                          style={{ width: `${analysis.complexity_score}%` }}
+                          style={{ width: `${Math.max(0, Math.min(100, analysis.complexity_score ?? 0))}%` }}
                         />
                       </div>
                     </div>

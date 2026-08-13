@@ -225,7 +225,7 @@ const SkillRadar = ({ skills, className, compact = false }: SkillRadarProps) => 
                   <motion.div
                     className="h-full rounded-full bg-primary"
                     initial={{ width: 0 }}
-                    whileInView={{ width: `${skill.score}%` }}
+                    whileInView={{ width: `${Math.max(0, Math.min(100, skill.score ?? 0))}%` }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, delay: 0.3 + index * 0.1 }}
                   />

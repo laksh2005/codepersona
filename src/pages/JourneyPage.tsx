@@ -1,14 +1,12 @@
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Share2, RefreshCw, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { useTransition } from "@/contexts/TransitionContext";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 
 import HeroSection from "@/components/journey/HeroSection";
 import PersonaSection from "@/components/journey/PersonaSection";
@@ -20,129 +18,19 @@ import CareerProjection from "@/components/journey/CareerProjection";
 import LoadingState from "@/components/journey/LoadingState";
 import ErrorState from "@/components/journey/ErrorState";
 import RepoModal from "@/components/journey/RepoModal";
-import { useState, useMemo } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useJourney } from "@/hooks/useJourney";
 
-export interface JourneyData {
-  github_username: string;
-  github_data: {
-    user: {
-      name: string;
-      bio: string;
-      avatar_url: string;
-      followers: number;
-      following: number;
-      public_repos: number;
-      created_at: string;
-      location: string;
-      company: string;
-      blog: string;
-    };
-    repos: Array<{
-      name: string;
-      description: string;
-      language: string;
-      stargazers_count: number;
-      forks_count: number;
-      created_at: string;
-      updated_at: string;
-      topics: string[];
-      size: number;
-    }>;
-    languages: Record<string, number>;
-    contributions: {
-      total: number;
-      years: Array<{ year: number; contributions: number }>;
-    };
-  };
-  ai_persona?: {
-    title?: string;
-    insights?: string[];
-    codingStyle?: string;
-  } | null;
-  ai_story?: {
-    phases?: Array<{
-      title: string;
-      period: string;
-      description: string;
-      keyRepos: string[];
-      significance: string;
-    }>;
-  } | null;
-  ai_tech_evolution?: {
-    phases?: Array<{
-      period: string;
-      focus: string;
-      technologies: string[];
-      reasoning: string;
-    }>;
-  } | null;
-  ai_skills?: {
-    skills?: Array<{
-      name: string;
-      score: number;
-      reasoning: string;
-    }>;
-  } | null;
-  ai_achievements?: {
-    badges?: Array<{
-      name: string;
-      icon: string;
-      description: string;
-      reasoning: string;
-      rarity: "common" | "rare" | "legendary";
-    }>;
-  } | null;
-  ai_career_projection?: {
-    futureSkills?: string[];
-    roleAlignment?: string;
-    learningPath?: string[];
-    prediction?: string;
-  } | null;
-  cached?: boolean;
-  rateLimited?: boolean;
-  last_generated_at?: string;
-  hours_until_regenerate?: number | null;
-  message?: string;
-}
+export type { JourneyData } from "@/types/journey";
 
 const JourneyPage = () => {
   const { username } = useParams<{ username: string }>();
   const { navigateWithTransition, triggerTransition } = useTransition();
   const { theme, setTheme } = useTheme();
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
-  const [forceRegenerate, setForceRegenerate] = useState(false);
   const hasTriggeredTransition = useRef(false);
 
-  const { data: journey, isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ["journey", username, forceRegenerate],
-    queryFn: async (): Promise<JourneyData> => {
-      const { data, error } = await supabase.functions.invoke("github-journey", {
-        body: { username, forceRegenerate: forceRegenerate || undefined },
-      });
-
-      if (error) throw error;
-      if (data?.error) {
-        const customError = new Error(data.error);
-        (customError as any).errorType = data.errorType;
-        if (data.errorType === "RATE_LIMITED") {
-          toast.error(data.error || "Rate limited: Please wait 72 hours before regenerating.");
-        }
-        throw customError;
-      }
-      // Reset forceRegenerate after successful fetch
-      if (forceRegenerate) {
-        setForceRegenerate(false);
-      }
-      return data;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: (failureCount, error: any) => {
-      // Don't retry if user not found
-      if (error?.errorType === "USER_NOT_FOUND") return false;
-      return failureCount < 1;
-    },
-  });
+  const { data: journey, isLoading, error, isRefetching, refetch, regenerate } = useJourney(username);
 
   // Check if regenerate is allowed (72 hours must have passed)
   const canRegenerate = useMemo(() => {
@@ -156,12 +44,11 @@ const JourneyPage = () => {
     if (!canRegenerate) {
       const hoursLeft = journey?.hours_until_regenerate;
       if (hoursLeft) {
-        toast.error(`You can regenerate your code persona after ${hoursLeft} more hour${hoursLeft > 1 ? 's' : ''}.`);
+        toast.error(`You can regenerate your code persona after ${Math.ceil(hoursLeft)} more hour${hoursLeft >= 1 ? 's' : ''}.`);
       }
       return;
     }
-    setForceRegenerate(true);
-    refetch();
+    regenerate();
     toast.info("Regenerating journey... This may take a moment.");
   };
 
@@ -205,19 +92,28 @@ const JourneyPage = () => {
 
   const handleShare = async () => {
     const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({
-        title: `${username}'s Code Persona`,
-        url,
-      });
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
+    try {
+      if (navigator.share) {
+        // Cancelling the native share sheet rejects with AbortError — not a real failure.
+        await navigator.share({
+          title: `${username}'s Code Persona`,
+          url,
+        });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
+      } else {
+        toast.error("Sharing isn't supported in this browser.");
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        toast.error("Couldn't share this link.");
+      }
     }
   };
 
   if (isLoading) return <LoadingState username={username || ""} />;
-  if (error) return <ErrorState error={error as Error} onRetry={() => refetch()} />;
+  if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
   if (!journey) return <ErrorState error={new Error("No data found")} onRetry={() => refetch()} />;
 
   return (
@@ -237,6 +133,7 @@ const JourneyPage = () => {
             onClick={() => navigateWithTransition("/")}
             className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg"
             title="Back to Home"
+            aria-label="Back to Home"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -248,6 +145,7 @@ const JourneyPage = () => {
                 size="icon"
                 onClick={handleRegenerate}
                 disabled={isRefetching || !canRegenerate}
+                aria-label="Regenerate code persona"
                 className={cn(
                   "text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg",
                   !canRegenerate && "opacity-50 cursor-not-allowed"
@@ -266,6 +164,7 @@ const JourneyPage = () => {
             onClick={handleShare}
             className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg"
             title="Share Profile"
+            aria-label="Share Profile"
           >
             <Share2 className="w-4 h-4" />
           </Button>
@@ -275,9 +174,10 @@ const JourneyPage = () => {
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg"
             title="Toggle Theme"
+            aria-label="Toggle theme"
           >
-            <Sun className="h-4 w-4 rotate-0 scale-0 transition-all dark:scale-100" />
-            <Moon className="absolute h-4 w-4 rotate-0 scale-100 transition-all dark:scale-0" />
+            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
         </div>
       </motion.nav>

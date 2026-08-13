@@ -63,7 +63,7 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
   };
 
   return (
-    <section className="container mx-auto max-w-6xl px-6 pt-20 pb-14">
+    <section className="container mx-auto px-4 pt-20 pb-14">
       <div className="flex flex-col lg:flex-row items-start lg:items-center gap-12">
 
         {/* LEFT: Avatar + Identity */}
@@ -158,7 +158,7 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
           transition={{ duration: 0.6, delay: 0.15 }}
           className="w-full lg:w-auto flex justify-center"
         >
-          <div className="flex items-center gap-10 rounded-2xl bg-card/70 border border-border px-8 py-5 shadow-md">
+          <div className="flex items-center gap-6 sm:gap-10 rounded-2xl bg-card/70 border border-border px-5 sm:px-8 py-5 shadow-md max-w-full">
             <div className="flex flex-col items-center">
               <span className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
                 Public Repos

@@ -87,7 +87,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
              <div className="font-semibold text-foreground line-clamp-1">{latestPhase.focus}</div>
           </div>
           <div className="flex flex-wrap gap-1.5 content-start">
-            {latestPhase.technologies.slice(0, 8).map((tech) => (
+            {(latestPhase.technologies ?? []).slice(0, 8).map((tech) => (
               <span
                 key={tech}
                 className={`px-2 py-0.5 rounded text-[10px] font-medium border ${getTechColor(tech)}`}
@@ -95,7 +95,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
                 {tech}
               </span>
             ))}
-            {latestPhase.technologies.length > 8 && (
+            {(latestPhase.technologies?.length ?? 0) > 8 && (
               <span className="px-2 py-0.5 rounded text-[10px] font-medium border bg-muted text-muted-foreground">
                 +{latestPhase.technologies.length - 8}
               </span>
@@ -132,7 +132,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sortedPhases.map((phase, index) => (
             <motion.div
-              key={index}
+              key={`${phase.period}-${phase.focus}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -159,7 +159,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
 
                 {/* Technologies */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {phase.technologies.map((tech) => (
+                  {(phase.technologies ?? []).map((tech) => (
                     <span
                       key={tech}
                       className={`px-2.5 py-1 rounded-md text-xs font-medium border ${getTechColor(tech)}`}

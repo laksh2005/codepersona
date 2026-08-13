@@ -50,7 +50,11 @@ const rarityStyles = {
     icon: "bg-red-500/20 dark:bg-red-500/20 text-red-600 dark:text-red-400",
     glow: "shadow-red-500/10 dark:shadow-red-500/10",
   },
-};
+} satisfies Record<string, { bg: string; border: string; icon: string; glow: string }>;
+
+// AI-generated `rarity` isn't schema-guaranteed — fall back to "common" styling
+// rather than crashing the whole page on an unexpected value.
+const DEFAULT_RARITY_STYLES = rarityStyles.common;
 
 const Achievements = ({ achievements, className, compact = false }: AchievementsProps) => {
   const badges = achievements?.badges ?? [];
@@ -73,9 +77,9 @@ const Achievements = ({ achievements, className, compact = false }: Achievements
 
         <div className="flex-1 grid grid-cols-4 gap-2 content-start">
            {badges.slice(0, 8).map((badge, index) => {
-              const IconComponent = iconMap[badge.icon.toLowerCase()] || Trophy;
-              const styles = rarityStyles[badge.rarity];
-              
+              const IconComponent = iconMap[badge.icon?.toLowerCase()] || Trophy;
+              const styles = rarityStyles[badge.rarity] || DEFAULT_RARITY_STYLES;
+
               return (
                 <TooltipProvider key={index}>
                   <Tooltip>
@@ -122,8 +126,8 @@ const Achievements = ({ achievements, className, compact = false }: Achievements
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {badges.map((badge, index) => {
-            const IconComponent = iconMap[badge.icon.toLowerCase()] || Trophy;
-            const styles = rarityStyles[badge.rarity];
+            const IconComponent = iconMap[badge.icon?.toLowerCase()] || Trophy;
+            const styles = rarityStyles[badge.rarity] || DEFAULT_RARITY_STYLES;
 
             return (
               <motion.div

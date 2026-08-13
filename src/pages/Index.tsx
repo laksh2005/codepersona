@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, ArrowRight, Sparkles, Moon, Sun, Globe, Linkedin, Twitter, Mail } from "lucide-react";
+import { Github, ArrowRight, Sparkles, Moon, Sun, Globe, Linkedin, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "next-themes";
@@ -33,20 +33,24 @@ const Index = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.trim()) {
-      setIsLoading(true);
+    const trimmed = username.trim();
+    if (!trimmed) return;
+
+    setIsLoading(true);
+    try {
       // Show transition immediately
       await triggerTransition("in", 1000);
       setShowLoadingPage(true);
-
-      // Show loading page for 2-3 seconds
-      // await new Promise(resolve => setTimeout(resolve, 2500));
 
       // Trigger reverse broadcast transition
       await triggerTransition("out", 1000);
 
       // Navigate to journey page (without transition since we already did it)
-      navigateWithoutTransition(`/${username.trim()}`);
+      navigateWithoutTransition(`/${encodeURIComponent(trimmed)}`);
+    } finally {
+      // Component unmounts on successful navigation anyway; this only matters
+      // if the user lands back on this page (e.g. browser back) mid-flight.
+      setIsLoading(false);
     }
   };
 
@@ -77,8 +81,6 @@ const Index = () => {
             className="min-h-screen bg-background relative overflow-hidden"
           >
             <TetrisBackground keystrokeCount={keystrokeCount} />
-      
-      {/* <div className="absolute inset-0 bg-grid-pattern opacity-50" /> */}
 
       <div className="relative z-10 container mx-auto px-4 py-12 min-h-screen flex flex-col">
         <motion.header
@@ -133,6 +135,11 @@ const Index = () => {
                 <Input
                   type="text"
                   placeholder="Enter GitHub username"
+                  aria-label="GitHub username"
+                  name="github-username"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   value={username}
                   onChange={handleInputChange}
                   className="pl-12 h-14 bg-white/20 dark:bg-white/5 backdrop-blur-sm border-0 text-lg rounded-xl placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-primary/50"
@@ -142,6 +149,7 @@ const Index = () => {
                 type="submit"
                 size="lg"
                 disabled={!username.trim() || isLoading}
+                aria-label="Generate code persona"
                 className="h-14 w-14 rounded-xl font-sans font-semibold bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300"
               >
                 {isLoading ? (
@@ -169,20 +177,10 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-muted-foreground text-sm text-centre"
+            className="text-muted-foreground text-sm text-center"
           >
             get yours at <span className="font-bold text-primary">codepersona.app/your-github-username</span>
           </motion.p>
-
-          {/* <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-muted-foreground text-xs pt-10 text-red-300 text-centre"
-          >
-            services down due to very high traffic, will resume shortly, when this text disappears
-          </motion.p> */}
-
         </main>
 
         <motion.footer
@@ -206,6 +204,7 @@ const Index = () => {
           <div className="flex items-center justify-center gap-4">
             <a
               href="mailto:lakshnijhawan.work@gmail.com"
+              aria-label="Email Laksh Nijhawan"
               className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
             >
               <Mail className="w-4 h-4" />
@@ -214,6 +213,7 @@ const Index = () => {
               href="https://www.linkedin.com/in/laksh-nijhawan-576888280/"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Laksh Nijhawan on LinkedIn"
               className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
             >
               <Linkedin className="w-4 h-4" />
@@ -222,6 +222,7 @@ const Index = () => {
               href="https://github.com/laksh2005"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Laksh Nijhawan on GitHub"
               className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
             >
               <Github className="w-4 h-4" />
@@ -230,6 +231,7 @@ const Index = () => {
               href="https://x.com/laksh_2705"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Laksh Nijhawan on X"
               className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
             >
               <XIcon className="w-4 h-4" />

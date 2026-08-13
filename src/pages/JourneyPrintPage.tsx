@@ -1,67 +1,59 @@
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
-import html2pdf from "html2pdf.js";
-import { supabase } from "@/integrations/supabase/client";
-import type { JourneyData } from "./JourneyPage";
+import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import LoadingState from "@/components/journey/LoadingState";
 import ErrorState from "@/components/journey/ErrorState";
+import { useJourney } from "@/hooks/useJourney";
+
+async function generatePdf(githubUsername: string) {
+  const element = document.getElementById("print-content");
+  if (!element) return;
+
+  // Wait for web fonts to finish loading rather than guessing with a fixed
+  // delay — otherwise the PDF can be rendered with fallback typefaces.
+  if (typeof document.fonts?.ready?.then === "function") {
+    await document.fonts.ready;
+  }
+
+  const html2pdf = (await import("html2pdf.js")).default;
+
+  await html2pdf()
+    .set({
+      margin: 0,
+      filename: `${githubUsername}-code-persona.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+    })
+    .from(element)
+    .save();
+}
 
 const JourneyPrintPage = () => {
   const { username } = useParams<{ username: string }>();
-
-  const { data: journey, isLoading, error, refetch } = useQuery({
-    queryKey: ["journey-print", username],
-    queryFn: async (): Promise<JourneyData> => {
-      const { data, error } = await supabase.functions.invoke("github-journey", {
-        body: { username },
-      });
-
-      if (error) throw error;
-      if (data?.error) {
-        const customError = new Error(data.error);
-        (customError as any).errorType = data.errorType;
-        throw customError;
-      }
-      return data;
-    },
-    staleTime: 1000 * 60 * 5,
-    retry: 0,
-  });
+  const { data: journey, isLoading, error, refetch } = useJourney(username);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
-    if (journey) {
-      setTimeout(() => {
-        const element = document.getElementById("print-content");
-        if (element) {
-          html2pdf()
-            .set({
-              margin: 0,
-              filename: `${journey.github_username}-code-persona.pdf`,
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 2 },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-              pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-              html2canvas: { scale: 2, useCORS: true },
-            })
-            .from(element)
-            .toPdf()
-            .get('pdf')
-            .then(pdf => {
-              // Scale to fit one page
-              const totalPages = pdf.internal.getNumberOfPages();
-              if (totalPages > 1) {
-                pdf.deletePage(2);
-              }
-            })
-            .save();
-        }
-      }, 500);
-    }
+    if (!journey) return;
+    let cancelled = false;
+
+    setIsGenerating(true);
+    generatePdf(journey.github_username)
+      .catch((err) => console.error("Failed to generate PDF:", err))
+      .finally(() => {
+        if (!cancelled) setIsGenerating(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [journey]);
 
   if (isLoading) return <LoadingState username={username || ""} />;
-  if (error) return <ErrorState error={error as Error} onRetry={() => refetch()} />;
+  if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
   if (!journey) return <ErrorState error={new Error("No data found")} onRetry={() => refetch()} />;
 
   const { github_data, ai_persona, ai_skills, ai_achievements, ai_career_projection } = journey;
@@ -75,8 +67,10 @@ const JourneyPrintPage = () => {
   const topSkills = ai_skills?.skills?.slice(0, 5) ?? [];
   const keyBadges = ai_achievements?.badges?.slice(0, 3) ?? [];
 
-  const totalStars = repos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
-  const totalRepos = repos.length;
+  const safeRepos = repos ?? [];
+  const totalStars = safeRepos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
+  const totalRepos = safeRepos.length;
+  const totalContributions = contributions?.total ?? 0;
 
   return (
     <div className="min-h-screen bg-white text-black flex justify-center items-start py-8">
@@ -148,7 +142,7 @@ const JourneyPrintPage = () => {
           <h2 className="text-base font-semibold mb-1">Repository Overview</h2>
           <p className="text-gray-800">
             Total repositories: {totalRepos}. Total stars across public repositories: {totalStars}. Total recorded
-            contributions: {contributions.total}.
+            contributions: {totalContributions}.
           </p>
           {primaryLanguages.length > 0 && (
             <p className="text-gray-800 mt-1">
@@ -212,6 +206,15 @@ const JourneyPrintPage = () => {
           </section>
         )}
       </div>
+
+      <Button
+        onClick={() => generatePdf(journey.github_username)}
+        disabled={isGenerating}
+        className="no-print fixed bottom-6 right-6 shadow-lg"
+      >
+        <Download className="w-4 h-4 mr-2" />
+        {isGenerating ? "Generating…" : "Download again"}
+      </Button>
     </div>
   );
 };

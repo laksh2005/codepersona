@@ -5,7 +5,6 @@ interface LoadingStateProps {
   username: string;
 }
 
-// 1. Updated type to include "final"
 const LoadingState = ({ username }: LoadingStateProps) => {
   const [reminder, setReminder] = useState<null | "hydrate" | "posture" | "final">(null);
 
@@ -18,7 +17,6 @@ const LoadingState = ({ username }: LoadingStateProps) => {
       setReminder("posture");
     }, 8000);
 
-    // 2. Added the 11-second timer
     const finalTimer = setTimeout(() => {
       setReminder("final");
     }, 12000);
@@ -104,7 +102,6 @@ const LoadingState = ({ username }: LoadingStateProps) => {
                 transition={{ duration: 0.4 }}
                 className="text-sm text-muted-foreground mt-2"
               >
-                {/* 3. Updated logic for the new line */}
                 {reminder === "hydrate" && "A reminder to hydrate yourself"}
                 {reminder === "posture" && "and also to fix your posture"}
                 {reminder === "final" && "here we go"}

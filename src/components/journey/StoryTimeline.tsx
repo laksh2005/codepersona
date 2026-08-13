@@ -119,7 +119,7 @@ const StoryTimeline = ({
 
         {sortedPhases.map((phase, index) => (
           <motion.div
-            key={index}
+            key={`${phase.title}-${phase.period}`}
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
