@@ -191,23 +191,24 @@ const Index = () => {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="text-center py-8 border-t border-border/30"
         >
-          <p className="font-display text-sm text-muted-foreground mb-4">
+          <p className="font-display text-lg text-muted-foreground mb-3">
             made by Laksh Nijhawan
           </p>
+          <a
+            href="https://laksh1.me"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-medium text-sm hover:bg-primary/20 hover:border-primary/50 transition-all"
+          >
+            <Globe className="w-4 h-4" />
+            laksh1.me
+          </a>
           <div className="flex items-center justify-center gap-4">
             <a
               href="mailto:lakshnijhawan.work@gmail.com"
               className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
             >
               <Mail className="w-4 h-4" />
-            </a>
-            <a
-              href="https://laksh1.me"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
-            >
-              <Globe className="w-4 h-4" />
             </a>
             <a
               href="https://www.linkedin.com/in/laksh-nijhawan-576888280/"

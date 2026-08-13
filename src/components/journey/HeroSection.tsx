@@ -90,9 +90,14 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
               {user.name || journey.github_username}
             </h1>
 
-            <p className="text-muted-foreground mb-3">
+            <a
+              href={`https://github.com/${journey.github_username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground mb-3 inline-block hover:text-primary transition"
+            >
               @{journey.github_username}
-            </p>
+            </a>
 
             {user.bio && (
               <p className="max-w-xl text-muted-foreground text-sm md:text-base mb-4">
