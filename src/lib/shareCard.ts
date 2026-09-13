@@ -116,25 +116,24 @@ function buildCardElement(journey: JourneyData): HTMLDivElement {
   /* ---------- Footer: skills + wordmark ---------- */
   const footer = el("div", {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
     gap: "24px",
   });
 
-  const skillsRow = el("div", { display: "flex", gap: "14px", flexWrap: "wrap" });
+  const skillsRow = el("div", { display: "flex", alignItems: "center", gap: "28px", flexWrap: "wrap" });
   topSkills.forEach((skill) => {
     skillsRow.appendChild(
       el(
         "span",
         {
-          padding: "11px 22px",
-          borderRadius: "9999px",
-          border: "1px solid rgba(200,168,105,0.35)",
-          background: "rgba(200,168,105,0.10)",
           color: GOLD,
           fontSize: "19px",
           fontWeight: "500",
           whiteSpace: "nowrap",
+          textDecoration: "underline",
+          textDecorationColor: GOLD,
+          textUnderlineOffset: "6px",
         },
         skill.name
       )
