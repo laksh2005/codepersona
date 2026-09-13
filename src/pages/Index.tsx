@@ -127,7 +127,7 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             onSubmit={handleSubmit}
-            className="w-full max-w-lg mb-8"
+            className="w-full max-w-lg mb-4"
           >
             <div className="backdrop-blur-xl bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-2 flex gap-2 shadow-2xl shadow-primary/10">
               <div className="flex-1 relative">
@@ -172,6 +172,22 @@ const Index = () => {
               Generating your code persona...
             </motion.p>
           )}
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-muted-foreground text-sm text-center mb-4"
+          >
+            try{" "}
+            <button
+              type="button"
+              onClick={() => setUsername("laksh2005")}
+              className="font-bold text-primary hover:underline"
+            >
+              @laksh2005
+            </button>
+          </motion.p>
 
           <motion.p
             initial={{ opacity: 0 }}

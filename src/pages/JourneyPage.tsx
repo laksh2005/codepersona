@@ -13,7 +13,6 @@ import PersonaSection from "@/components/journey/PersonaSection";
 import StoryTimeline from "@/components/journey/StoryTimeline";
 import TechEvolution from "@/components/journey/TechEvolution";
 import SkillRadar from "@/components/journey/SkillRadar";
-import Achievements from "@/components/journey/Achievements";
 import CareerProjection from "@/components/journey/CareerProjection";
 import LoadingState from "@/components/journey/LoadingState";
 import ErrorState from "@/components/journey/ErrorState";
@@ -200,9 +199,6 @@ const JourneyPage = () => {
             )}
             {journey.ai_skills?.skills && journey.ai_skills.skills.length > 0 && (
               <SkillRadar skills={journey.ai_skills} />
-            )}
-            {journey.ai_achievements?.badges && journey.ai_achievements.badges.length > 0 && (
-              <Achievements achievements={journey.ai_achievements} />
             )}
             {journey.ai_career_projection && (
               <CareerProjection projection={journey.ai_career_projection} />
