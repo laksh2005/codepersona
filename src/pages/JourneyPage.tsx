@@ -1,12 +1,13 @@
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Share2, RefreshCw, Moon, Sun } from "lucide-react";
+import { ArrowLeft, Share2, RefreshCw, Moon, Sun, ImageDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { useTransition } from "@/contexts/TransitionContext";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useMemo } from "react";
+import { downloadShareCard } from "@/lib/shareCard";
 
 import HeroSection from "@/components/journey/HeroSection";
 import PersonaSection from "@/components/journey/PersonaSection";
@@ -27,6 +28,7 @@ const JourneyPage = () => {
   const { navigateWithTransition, triggerTransition } = useTransition();
   const { theme, setTheme } = useTheme();
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+  const [isGeneratingCard, setIsGeneratingCard] = useState(false);
   const hasTriggeredTransition = useRef(false);
 
   const { data: journey, isLoading, error, isRefetching, refetch, regenerate } = useJourney(username);
@@ -111,6 +113,18 @@ const JourneyPage = () => {
     }
   };
 
+  const handleSaveImage = async () => {
+    if (!journey || isGeneratingCard) return;
+    setIsGeneratingCard(true);
+    try {
+      await downloadShareCard(journey);
+    } catch {
+      toast.error("Couldn't generate the share image.");
+    } finally {
+      setIsGeneratingCard(false);
+    }
+  };
+
   if (isLoading) return <LoadingState username={username || ""} />;
   if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
   if (!journey) return <ErrorState error={new Error("No data found")} onRetry={() => refetch()} />;
@@ -166,6 +180,17 @@ const JourneyPage = () => {
             aria-label="Share Profile"
           >
             <Share2 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSaveImage}
+            disabled={isGeneratingCard}
+            className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg"
+            title="Save as Image"
+            aria-label="Save as image"
+          >
+            <ImageDown className={`w-4 h-4 ${isGeneratingCard ? "animate-pulse" : ""}`} />
           </Button>
           <Button
             variant="ghost"
