@@ -6,9 +6,11 @@ import {
   Link as LinkIcon,
   Calendar,
   Download,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { JourneyData } from "@/pages/JourneyPage";
+import { downloadMarkdown } from "@/lib/exportMarkdown";
 
 /* =======================
    Animated counter hook
@@ -144,10 +146,16 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
               </span>
             </div>
 
-            <Button variant="outline" size="sm" onClick={handleSavePDF}>
-              <Download className="w-4 h-4 mr-2" />
-              Save as PDF
-            </Button>
+            <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+              <Button variant="outline" size="sm" onClick={handleSavePDF}>
+                <Download className="w-4 h-4 mr-2" />
+                Save as PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => downloadMarkdown(journey)}>
+                <FileText className="w-4 h-4 mr-2" />
+                Save as Markdown
+              </Button>
+            </div>
           </div>
         </motion.div>
 

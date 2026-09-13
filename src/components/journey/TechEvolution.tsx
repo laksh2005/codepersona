@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Layers, ArrowRight } from "lucide-react";
+import { Layers, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TechEvolutionProps {
@@ -22,26 +22,25 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
     return null;
   }
 
-  // Sort phases by date (newest first)
-  // Parse period strings to extract year for sorting
-  const parsePeriodYear = (period: string): number => {
-    // Extract years from period strings like "2019-2020", "Early 2021", "Late 2024 - Early 2025", "Mid 2025 onwards"
+  // Parse period strings like "2019-2020", "Early 2021", "Late 2024 - Early 2025"
+  // into a {min, max} year range, so ties (e.g. two phases both mentioning
+  // 2026) still resolve chronologically instead of by array order.
+  const parsePeriodRange = (period: string): { min: number; max: number } => {
     const yearMatches = period.match(/\b(19|20)\d{2}\b/g);
-    if (yearMatches && yearMatches.length > 0) {
-      // Use the latest year mentioned in the period
-      const years = yearMatches.map(y => parseInt(y, 10));
-      return Math.max(...years);
+    if (!yearMatches || yearMatches.length === 0) {
+      return { min: 0, max: 0 };
     }
-    // Fallback: if no year found, return 0 (will sort to bottom)
-    return 0;
+    const years = yearMatches.map((y) => parseInt(y, 10));
+    return { min: Math.min(...years), max: Math.max(...years) };
   };
 
-  // Sort phases by date (newest first)
+  // Newest phase first, oldest last. The connector between cards points
+  // left (← "led into this") rather than right, since time flows from the
+  // older card (further along in reading order) back into the newer one.
   const sortedPhases = [...phases].sort((a, b) => {
-    const yearA = parsePeriodYear(a.period);
-    const yearB = parsePeriodYear(b.period);
-    // Sort descending (newest first)
-    return yearB - yearA;
+    const rangeA = parsePeriodRange(a.period);
+    const rangeB = parsePeriodRange(b.period);
+    return rangeB.min - rangeA.min || rangeB.max - rangeA.max;
   });
 
   const techColors: Record<string, string> = {
@@ -65,7 +64,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
   };
 
   if (compact) {
-    const latestPhase = sortedPhases[0]; // Most recent phase is now first
+    const latestPhase = sortedPhases[0];
 
     if (!latestPhase) {
       return null;
@@ -142,7 +141,7 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
               {/* Connector arrow (except last) */}
               {index < sortedPhases.length - 1 && index % 3 !== 2 && (
                 <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10">
-                  <ArrowRight className="w-6 h-6 text-muted-foreground/40" />
+                  <ArrowLeft className="w-6 h-6 text-muted-foreground/40" />
                 </div>
               )}
 

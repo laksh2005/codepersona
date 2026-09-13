@@ -21,7 +21,7 @@ async function generatePdf(githubUsername: string) {
   await html2pdf()
     .set({
       margin: 0,
-      filename: `${githubUsername}-code-persona.pdf`,
+      filename: `${githubUsername}-codepersona.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
@@ -56,7 +56,7 @@ const JourneyPrintPage = () => {
   if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
   if (!journey) return <ErrorState error={new Error("No data found")} onRetry={() => refetch()} />;
 
-  const { github_data, ai_persona, ai_skills, ai_achievements, ai_career_projection } = journey;
+  const { github_data, ai_persona, ai_skills, ai_career_projection } = journey;
   const { user, repos, contributions, languages } = github_data;
 
   const primaryLanguages = Object.entries(languages ?? {})
@@ -65,7 +65,6 @@ const JourneyPrintPage = () => {
     .map(([name]) => name);
 
   const topSkills = ai_skills?.skills?.slice(0, 5) ?? [];
-  const keyBadges = ai_achievements?.badges?.slice(0, 3) ?? [];
 
   const safeRepos = repos ?? [];
   const totalStars = safeRepos.reduce((acc, repo) => acc + repo.stargazers_count, 0);
@@ -171,17 +170,6 @@ const JourneyPrintPage = () => {
             {topSkills.map((skill) => (
               <p key={skill.name} className="text-gray-800">
                 {skill.name}: {skill.score}/100 – {skill.reasoning}
-              </p>
-            ))}
-          </section>
-        )}
-
-        {!!keyBadges.length && (
-          <section className="mb-4">
-            <h2 className="text-base font-semibold mb-1">Notable Achievements</h2>
-            {keyBadges.map((badge) => (
-              <p key={badge.name} className="text-gray-800">
-                {badge.name}: {badge.description} (evidence: {badge.reasoning})
               </p>
             ))}
           </section>
