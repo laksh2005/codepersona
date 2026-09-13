@@ -7,13 +7,10 @@ import {
   Calendar,
   Download,
   FileText,
-  Badge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import type { JourneyData } from "@/pages/JourneyPage";
 import { downloadMarkdown } from "@/lib/exportMarkdown";
-import { downloadPersonaBadge, markdownEmbedSnippet } from "@/lib/personaBadge";
 
 /* =======================
    Animated counter hook
@@ -65,20 +62,6 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
 
   const handleSavePDF = () => {
     window.open(`/${journey.github_username}/print`, "_blank");
-  };
-
-  const handleGetBadge = async () => {
-    downloadPersonaBadge(journey);
-    const filename = `${journey.github_username}-codepersona-badge.svg`;
-    const snippet = markdownEmbedSnippet(journey, filename);
-    try {
-      await navigator.clipboard.writeText(snippet);
-      toast.success("Badge downloaded — README embed snippet copied to clipboard!");
-    } catch {
-      toast.success("Badge downloaded! Add it to your repo, then embed it with:", {
-        description: snippet,
-      });
-    }
   };
 
   return (
@@ -171,10 +154,6 @@ const HeroSection = ({ journey }: HeroSectionProps) => {
               <Button variant="outline" size="sm" onClick={() => downloadMarkdown(journey)}>
                 <FileText className="w-4 h-4 mr-2" />
                 Save as Markdown
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleGetBadge}>
-                <Badge className="w-4 h-4 mr-2" />
-                Get README Badge
               </Button>
             </div>
           </div>
