@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 
 interface LoadingStateProps {
   username: string;
+  /** Pass true when `username` is already a pre-formatted label (e.g. "@a vs @b")
+   * so it's rendered as-is instead of getting a single leading "@" prepended. */
+  raw?: boolean;
 }
 
-const LoadingState = ({ username }: LoadingStateProps) => {
+const LoadingState = ({ username, raw = false }: LoadingStateProps) => {
   const [reminder, setReminder] = useState<null | "hydrate" | "posture" | "final">(null);
 
   useEffect(() => {
@@ -61,7 +64,7 @@ const LoadingState = ({ username }: LoadingStateProps) => {
 
           <h1 className="font-display text-3xl md:text-4xl font-semibold">
             <span className="bg-gradient-to-r from-primary via-yellow-400 to-primary bg-clip-text text-transparent">
-              @{username}
+              {raw ? username : `@${username}`}
             </span>
           </h1>
         </motion.div>

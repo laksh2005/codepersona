@@ -16,6 +16,7 @@ import LoadingState from "./components/journey/LoadingState";
 // for the print flow.
 const JourneyPage = lazy(() => import("./pages/JourneyPage"));
 const JourneyPrintPage = lazy(() => import("./pages/JourneyPrintPage"));
+const ComparePage = lazy(() => import("./pages/ComparePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ const AppContent = () => {
         <Suspense fallback={<LoadingState username="" />}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/compare/:userA/:userB" element={<ComparePage />} />
             <Route path="/:username" element={<JourneyPage />} />
             <Route path="/:username/print" element={<JourneyPrintPage />} />
             <Route path="*" element={<NotFound />} />
