@@ -22,7 +22,7 @@ const COPY: Record<string, { title: string; hint: string; showRetry: boolean }> 
   },
   RATE_LIMITED: {
     title: "Hold on a moment",
-    hint: "This persona was generated recently. You can regenerate it again in a bit — the exact wait time is shown next to the regenerate button.",
+    hint: "This persona was generated recently. You can regenerate it again in a bit; the exact wait time is shown next to the regenerate button.",
     showRetry: false,
   },
 };

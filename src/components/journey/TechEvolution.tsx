@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Layers, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { matchesWholePhrase } from "@/lib/textMatch";
 
 interface TechEvolutionProps {
   evolution?: {
@@ -57,9 +58,10 @@ const TechEvolution = ({ evolution, className, compact = false }: TechEvolutionP
   };
 
   const getTechColor = (tech: string) => {
-    const match = Object.keys(techColors).find((key) =>
-      tech.toLowerCase().includes(key.toLowerCase())
-    );
+    // Whole-word matching — plain substring matching let "Go" match inside
+    // "Django"/"MongoDB"/"Diagram" and "Rust" match inside "Trust"/"Robust",
+    // miscoloring any tech chip that happened to contain those letters.
+    const match = Object.keys(techColors).find((key) => matchesWholePhrase(tech, key));
     return match ? techColors[match] : "bg-muted text-muted-foreground border-border";
   };
 

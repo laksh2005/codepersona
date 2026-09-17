@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, ArrowRight, Sparkles, Moon, Sun, Globe, Linkedin, Mail } from "lucide-react";
+import { Github, ArrowRight, Sparkles, Moon, Sun, Globe, Linkedin, Mail, Swords, UserRound } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "next-themes";
 import TetrisBackground from "@/components/ConstellationBackground";
 import { useTransition } from "@/contexts/TransitionContext";
 import LoadingState from "@/components/journey/LoadingState";
+import { canonicalComparePath } from "@/lib/compareUrl";
 
 const XIcon = ({ className }: { className?: string }) => (
   <svg
@@ -24,34 +27,60 @@ const XIcon = ({ className }: { className?: string }) => (
 );
 
 const Index = () => {
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<"single" | "compare">("single");
   const [username, setUsername] = useState("");
+  const [compareUserA, setCompareUserA] = useState("");
+  const [compareUserB, setCompareUserB] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showLoadingPage, setShowLoadingPage] = useState(false);
+  const [loadingLabel, setLoadingLabel] = useState("");
+  const [loadingRaw, setLoadingRaw] = useState(false);
   const [keystrokeCount, setKeystrokeCount] = useState(0);
   const { navigateWithTransition, navigateWithoutTransition, triggerTransition } = useTransition();
   const { theme, setTheme } = useTheme();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = username.trim();
-    if (!trimmed) return;
+  // A report page's "Compare with someone?" nudge links here as /?vs=<username>,
+  // which drops straight into compare mode with the first slot already filled.
+  useEffect(() => {
+    const vs = searchParams.get("vs");
+    if (vs) {
+      setCompareUserA(vs);
+      setMode("compare");
+    }
+  }, [searchParams]);
 
+  const goToPath = async (path: string, label: string, raw = false) => {
     setIsLoading(true);
+    setLoadingLabel(label);
+    setLoadingRaw(raw);
     try {
-      // Show transition immediately
       await triggerTransition("in", 1000);
       setShowLoadingPage(true);
-
-      // Trigger reverse broadcast transition
       await triggerTransition("out", 1000);
-
-      // Navigate to journey page (without transition since we already did it)
-      navigateWithoutTransition(`/${encodeURIComponent(trimmed)}`);
+      navigateWithoutTransition(path);
     } finally {
       // Component unmounts on successful navigation anyway; this only matters
       // if the user lands back on this page (e.g. browser back) mid-flight.
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = username.trim();
+    if (!trimmed) return;
+    await goToPath(`/${encodeURIComponent(trimmed)}`, trimmed);
+  };
+
+  const handleCompareSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const path = canonicalComparePath(compareUserA, compareUserB);
+    if (!path) {
+      toast.error("Enter two different valid GitHub usernames to compare.");
+      return;
+    }
+    await goToPath(path, `@${compareUserA.trim()} vs @${compareUserB.trim()}`, true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +99,7 @@ const Index = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <LoadingState username={username.trim()} />
+            <LoadingState username={loadingLabel} raw={loadingRaw} />
           </motion.div>
         ) : (
           <motion.div
@@ -122,46 +151,137 @@ const Index = () => {
             </p>
           </motion.div>
 
-          <motion.form
-            initial={{ opacity: 0, y: 20 }}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            onSubmit={handleSubmit}
-            className="w-full max-w-lg mb-4"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="inline-flex items-center gap-1 p-1 mb-6 rounded-full bg-white/10 dark:bg-white/5 border border-white/10"
           >
-            <div className="backdrop-blur-xl bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-2 flex gap-2 shadow-2xl shadow-primary/10">
-              <div className="flex-1 relative">
-                <Github className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Enter GitHub username"
-                  aria-label="GitHub username"
-                  name="github-username"
-                  autoComplete="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  value={username}
-                  onChange={handleInputChange}
-                  className="pl-12 h-14 bg-white/20 dark:bg-white/5 backdrop-blur-sm border-0 text-lg rounded-xl placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-primary/50"
-                />
+            <button
+              type="button"
+              onClick={() => setMode("single")}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                mode === "single" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <UserRound className="w-3.5 h-3.5" />
+              Generate
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("compare")}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                mode === "compare" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Swords className="w-3.5 h-3.5" />
+              Compare
+            </button>
+          </motion.div>
+
+          {mode === "single" ? (
+            <motion.form
+              key="single-form"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              onSubmit={handleSubmit}
+              className="w-full max-w-lg mb-4"
+            >
+              <div className="backdrop-blur-xl bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-2 flex gap-2 shadow-2xl shadow-primary/10">
+                <div className="flex-1 relative">
+                  <Github className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Enter GitHub username"
+                    aria-label="GitHub username"
+                    name="github-username"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    value={username}
+                    onChange={handleInputChange}
+                    className="pl-12 h-14 bg-white/20 dark:bg-white/5 backdrop-blur-sm border-0 text-lg rounded-xl placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-primary/50"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={!username.trim() || isLoading}
+                  aria-label="Generate code persona"
+                  className="h-14 w-14 rounded-xl font-sans font-semibold bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300"
+                >
+                  {isLoading ? (
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                      <Sparkles className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    <ArrowRight className="w-5 h-5" />
+                  )}
+                </Button>
               </div>
-              <Button
-                type="submit"
-                size="lg"
-                disabled={!username.trim() || isLoading}
-                aria-label="Generate code persona"
-                className="h-14 w-14 rounded-xl font-sans font-semibold bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300"
-              >
-                {isLoading ? (
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-                    <Sparkles className="w-5 h-5" />
-                  </motion.div>
-                ) : (
-                  <ArrowRight className="w-5 h-5" />
-                )}
-              </Button>
-            </div>
-          </motion.form>
+            </motion.form>
+          ) : (
+            <motion.form
+              key="compare-form"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              onSubmit={handleCompareSubmit}
+              className="w-full max-w-lg mb-4"
+            >
+              <div className="backdrop-blur-xl bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-2xl p-2 flex flex-col gap-2 shadow-2xl shadow-primary/10">
+                <div className="relative">
+                  <Github className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="First GitHub username"
+                    aria-label="First GitHub username"
+                    name="compare-username-a"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    value={compareUserA}
+                    onChange={(e) => setCompareUserA(e.target.value)}
+                    className="pl-12 h-14 bg-white/20 dark:bg-white/5 backdrop-blur-sm border-0 text-lg rounded-xl placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-primary/50"
+                  />
+                </div>
+                <div className="relative">
+                  <Github className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Second GitHub username"
+                    aria-label="Second GitHub username"
+                    name="compare-username-b"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    value={compareUserB}
+                    onChange={(e) => setCompareUserB(e.target.value)}
+                    className="pl-12 h-14 bg-white/20 dark:bg-white/5 backdrop-blur-sm border-0 text-lg rounded-xl placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-primary/50"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={!compareUserA.trim() || !compareUserB.trim() || isLoading}
+                  aria-label="Compare code personas"
+                  className="h-12 w-full rounded-xl font-sans font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300"
+                >
+                  {isLoading ? (
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                      <Sparkles className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    <>
+                      Compare
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.form>
+          )}
 
           {isLoading && (
             <motion.p
@@ -169,25 +289,27 @@ const Index = () => {
               animate={{ opacity: 1 }}
               className="text-primary font-medium mb-4"
             >
-              Generating your code persona...
+              {mode === "single" ? "Generating your code persona..." : "Generating both code personas..."}
             </motion.p>
           )}
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-muted-foreground text-sm text-center mb-4"
-          >
-            try{" "}
-            <button
-              type="button"
-              onClick={() => setUsername("laksh2005")}
-              className="font-bold text-primary hover:underline"
+          {mode === "single" && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-muted-foreground text-sm text-center mb-4"
             >
-              @laksh2005
-            </button>
-          </motion.p>
+              try{" "}
+              <button
+                type="button"
+                onClick={() => setUsername("laksh2005")}
+                className="font-bold text-primary hover:underline"
+              >
+                @laksh2005
+              </button>
+            </motion.p>
+          )}
 
           <motion.p
             initial={{ opacity: 0 }}

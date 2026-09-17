@@ -1,13 +1,16 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Share2, RefreshCw, Moon, Sun, ImageDown } from "lucide-react";
+import { ArrowLeft, Share2, RefreshCw, Moon, Sun, ImageDown, Swords, ArrowRight, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { useTransition } from "@/contexts/TransitionContext";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { downloadShareCard } from "@/lib/shareCard";
+import { canonicalComparePath } from "@/lib/compareUrl";
 
 import HeroSection from "@/components/journey/HeroSection";
 import PersonaSection from "@/components/journey/PersonaSection";
@@ -18,6 +21,7 @@ import CareerProjection from "@/components/journey/CareerProjection";
 import LoadingState from "@/components/journey/LoadingState";
 import ErrorState from "@/components/journey/ErrorState";
 import RepoModal from "@/components/journey/RepoModal";
+import CompareCTA from "@/components/journey/CompareCTA";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useJourney } from "@/hooks/useJourney";
 
@@ -25,10 +29,13 @@ export type { JourneyData } from "@/types/journey";
 
 const JourneyPage = () => {
   const { username } = useParams<{ username: string }>();
+  const navigate = useNavigate();
   const { navigateWithTransition, triggerTransition } = useTransition();
   const { theme, setTheme } = useTheme();
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [compareTarget, setCompareTarget] = useState("");
   const hasTriggeredTransition = useRef(false);
 
   const { data: journey, isLoading, error, isRefetching, refetch, regenerate } = useJourney(username);
@@ -125,6 +132,18 @@ const JourneyPage = () => {
     }
   };
 
+  const handleCompareSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username) return;
+    const path = canonicalComparePath(username, compareTarget);
+    if (!path) {
+      toast.error("Enter a different, valid GitHub username to compare.");
+      return;
+    }
+    setIsCompareOpen(false);
+    navigate(path);
+  };
+
   if (isLoading) return <LoadingState username={username || ""} />;
   if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
   if (!journey) return <ErrorState error={new Error("No data found")} onRetry={() => refetch()} />;
@@ -195,6 +214,16 @@ const JourneyPage = () => {
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => setIsCompareOpen(true)}
+            className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg"
+            title="Compare with another profile"
+            aria-label="Compare with another profile"
+          >
+            <Swords className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-lg"
             title="Toggle Theme"
@@ -216,6 +245,7 @@ const JourneyPage = () => {
           >
             <HeroSection journey={journey} />
             {journey.ai_persona && <PersonaSection persona={journey.ai_persona} />}
+            {username && <CompareCTA username={username} />}
             {journey.ai_story?.phases && journey.ai_story.phases.length > 0 && (
               <StoryTimeline story={journey.ai_story} onRepoClick={setSelectedRepo} />
             )}
@@ -238,6 +268,37 @@ const JourneyPage = () => {
         repoName={selectedRepo || ""}
         username={username || ""}
       />
+
+      <Dialog open={isCompareOpen} onOpenChange={setIsCompareOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Compare @{username}</DialogTitle>
+            <DialogDescription>
+              See how @{username}'s stats, skills, and tech stack stack up against another GitHub profile.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCompareSubmit} className="flex gap-2">
+            <div className="flex-1 relative">
+              <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Their GitHub username"
+                aria-label="GitHub username to compare with"
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                value={compareTarget}
+                onChange={(e) => setCompareTarget(e.target.value)}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+            <Button type="submit" size="icon" disabled={!compareTarget.trim()} aria-label="Compare">
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

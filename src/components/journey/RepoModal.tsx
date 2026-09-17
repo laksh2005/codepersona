@@ -118,7 +118,7 @@ const RepoModal = ({ isOpen, onClose, repoName, username }: RepoModalProps) => {
                       </div>
                       <div className="flex items-end gap-2">
                         <span className={`text-3xl font-display font-bold ${getScoreColor(analysis.maturity_score)}`}>
-                          {analysis.maturity_score ?? "—"}
+                          {analysis.maturity_score ?? "N/A"}
                         </span>
                         <span className="text-muted-foreground text-sm mb-1">/100</span>
                       </div>
@@ -137,7 +137,7 @@ const RepoModal = ({ isOpen, onClose, repoName, username }: RepoModalProps) => {
                       </div>
                       <div className="flex items-end gap-2">
                         <span className={`text-3xl font-display font-bold ${getScoreColor(analysis.complexity_score)}`}>
-                          {analysis.complexity_score ?? "—"}
+                          {analysis.complexity_score ?? "N/A"}
                         </span>
                         <span className="text-muted-foreground text-sm mb-1">/100</span>
                       </div>
